@@ -1,0 +1,1 @@
+Example compositions and composite resource definitions.

@@ -1,0 +1,7 @@
+# reference architecture for AWS from upbound: https://github.com/upbound/platform-ref-aws
+apiVersion: pkg.crossplane.io/v1
+kind: Configuration
+metadata:
+  name: platform-ref-aws
+spec:
+  package: xpkg.upbound.io/upbound/platform-ref-aws:v1.1.0
