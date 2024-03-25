@@ -1,3 +1,13 @@
+#------------------------------------------------------------------------------
+# Filename: ops-cluster.yaml
+#
+# Description: Deployment manifests for pilot ops cluster
+#
+# Author: James Bramich (james@nofrixion.com)
+# 
+# History:
+# 25 March      2024  James Bramich   Created, Northdown, Tasmania
+#-----------------------------------------------------------------------------
 apiVersion: aws.platform.nofrixion.com/v1alpha1
 kind: Cluster
 metadata:

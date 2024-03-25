@@ -1,3 +1,16 @@
+#------------------------------------------------------------------------------
+# Filename: entra-id-oidc-provider.yaml
+#
+# Description: OIDC provider and Cluster role binding for EntraID authentication
+#
+# Author: James Bramich (james@nofrixion.com)
+#
+# TODO:
+#  - integrate this into the apis/eks-cluster composite resource definitions and composition files.
+# 
+# History:
+# 25 March      2024  James Bramich   Created, Northdown, Tasmania
+#-----------------------------------------------------------------------------
 apiVersion: eks.aws.upbound.io/v1beta1
 kind: IdentityProviderConfig
 metadata:
