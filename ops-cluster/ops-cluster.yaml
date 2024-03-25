@@ -1,30 +1,21 @@
-apiVersion: aws.platformref.upbound.io/v1alpha1
+apiVersion: aws.platform.nofrixion.com/v1alpha1
 kind: Cluster
 metadata:
   name: ops-pilot-cluster
-  namespace: nofrixion-ops
+  namespace: ops-cluster
 spec:
   compositeDeletePolicy: Foreground
   parameters:
-    id: ops-pilot
+    id: ops-pilot-1
     region: eu-west-1
-    version: "1.27"
+    version: "1.28"
     iam:
       # replace with your custom arn like:
       # roleArn: arn:aws:iam::123456789:role/AWSReservedSSO_AdministratorAccess_d703c73ed340fde7
       # roleArn: ${data.aws_eks_iam_default_admin}
-      roleArn: arn:aws:iam::145259453615:role/eks-admin
+      roleArn: arn:aws:iam::145259453615:role/AWSReservedSSO_AdministratorAccess_d3980a6c9782fd6d
     nodes:
       count: 3
       instanceType: t3.small
-#    gitops:
-#      git:
-#        url: https://github.com/upbound/platform-ref-aws/
-#        ref:
-#          # refs/heads/main
-#          # refs/tags/v0.1.0
-#          # refs/pull/420/head
-#          # refs/merge-requests/1/head
-#          name: refs/heads/main
   writeConnectionSecretToRef:
     name: ops-cluster-aws-kubeconfig

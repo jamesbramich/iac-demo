@@ -38,6 +38,9 @@ sudo microk8s enable rbac
 [Install](https://docs.crossplane.io/latest/software/install/) using helm:
 
 ```bash
+helm repo add crossplane-stable https://charts.crossplane.io/stable
+helm repo update
+
 helm install crossplane crossplane-stable/crossplane --namespace crossplane-system --create-namespace 
 
 # check it's up and running:
@@ -59,12 +62,14 @@ For full details see the [AWS Quickstart](https://docs.crossplane.io/latest/gett
 Some examples refer to a 'monolithic' `provider-aws` package. This is being deprecated in June 2024. The [`aws provider family`](https://marketplace.upbound.io/providers/upbound/provider-family-aws) should be used instead. The necessary providers can be installed via the Upbound [reference platform for AWS](https://github.com/upbound/platform-ref-aws).
 
 ```bash
-kubectl apply -f crossplane/platform-ref-aws.yaml
+kubectl apply -f crossplane/platform-ref-aws.yaml -n crossplane-system
+kubectl apply -f crossplane/provider-config-aws.yaml -n crossplane-system
 ```
 
 ## REFERENCES ##
 
 * [GitOps model for provisioning and bootstrapping Amazon EKS clusters using Crossplane and Argo CD](https://aws.amazon.com/blogs/containers/gitops-model-for-provisioning-and-bootstrapping-amazon-eks-clusters-using-crossplane-and-argo-cd/) - see section, `Amazon EKS cluster provisioning using Crossplane`
+* A video showing how to use a temporary local cluster to bootstrap [Crossplane to manage Crossplane](https://youtu.be/IlaYGgyg06o?si=mXM9p73MyrLCd8gA)
 * AWS Blueprints (community provider)
   * [Deployment examples](https://github.com/awslabs/crossplane-on-eks/tree/main/examples/aws-provider/composite-resources/eks)
-  * [Composition definiitions](https://github.com/awslabs/crossplane-on-eks/blob/main/compositions/aws-provider/eks/)
+  * [Composition definitions](https://github.com/awslabs/crossplane-on-eks/blob/main/compositions/aws-provider/eks/)

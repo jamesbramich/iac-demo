@@ -1,15 +1,29 @@
-# based on the network api fefinition for the aws reference platform
-# - https://github.com/upbound/configuration-aws-network/blob/main/apis/definition.yaml
+#------------------------------------------------------------------------------
+# Filename: definition.yaml
+#
+# Description: Composite resrouce definition for EKS compliant VPC. Based on:
+#                  https://github.com/upbound/configuration-aws-network/blob/main/apis/definition.yaml
+#
+# Author: James Bramich (james@nofrixion.com)
+#
+# History:
+# 25 March      2024  James Bramich   Created, Northdown, Tasmania
+#-----------------------------------------------------------------------------
 
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
 metadata:
-  name: xnetworks.aws.platform.upbound.io
+  name: xnetworks.aws.platform.nofrixion.com
 spec:
-  group: aws.platform.upbound.io
+  connectionSecretKeys:
+    - kubeconfig
+  group: aws.platform.nofrixion.com
   names:
     kind: XNetwork
     plural: xnetworks
+  claimNames:
+    kind: Network
+    plural: networks
   versions:
     - name: v1alpha1
       served: true

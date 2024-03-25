@@ -1,17 +1,29 @@
-# based on the network composition for the aws reference platform
-# - https://github.com/upbound/configuration-aws-network/blob/main/apis/basic/composition.yaml
-
+#------------------------------------------------------------------------------
+# Filename: composition.yaml
+#
+# Description: Composition for EKS compliant VPC. Based on:
+#                  https://github.com/upbound/configuration-aws-network/blob/main/apis/basic/composition.yaml
+#
+# Author: James Bramich (james@nofrixion.com)
+#
+# TODO
+# - add subnets for 3rd availablity zone
+# - add NAT gateway
+#
+# History:
+# 25 March      2024  James Bramich   Created, Northdown, Tasmania
+#-----------------------------------------------------------------------------
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: xnetworks.aws.platform.upbound.io
+  name: xnetwork.aws.platform.nofrixion.com
   labels:
     provider: aws
-    type: basic
+    type: eks-3-zone
 spec:
-  writeConnectionSecretsToNamespace: upbound-system
+  writeConnectionSecretsToNamespace: crossplane-system
   compositeTypeRef:
-    apiVersion: aws.platform.upbound.io/v1alpha1
+    apiVersion: aws.platform.nofrixion.com/v1alpha1
     kind: XNetwork
   mode: Pipeline
   pipeline:
@@ -303,7 +315,7 @@ spec:
 
           - name: route
             base:
-              apiVersion: ec2.aws.upbound.io/v1beta1
+              apiVersion: ec2.aws.upbound.io/v1beta2
               kind: Route
               spec:
                 forProvider:

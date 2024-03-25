@@ -1,0 +1,35 @@
+apiVersion: eks.aws.upbound.io/v1beta1
+kind: IdentityProviderConfig
+metadata:
+  annotations:
+    uptest.upbound.io/timeout: "3600"
+  name: nofrixion-azure-entra-id
+spec:
+  forProvider:
+    clusterName: ops-pilot-1
+    oidc:
+      - clientId: f2653318-e686-4fd1-85ec-5cf692ba0b20
+        issuerUrl: https://sts.windows.net/97c78528-728a-4eb7-b50e-ee7aced0a1ce/
+        usernameClaim: upn
+        groupsClaim: groups
+    region: eu-west-1
+---
+apiVersion: kubernetes.crossplane.io/v1alpha2
+kind: Object
+metadata:
+  name: aad-eks-admin-rb
+spec:
+  forProvider:
+    manifest:
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: cluster-admin
+      subjects:
+        - kind: Group
+          name: efaddfcc-7846-48db-a87b-62a211452c74 # NoFrixion-SysAdmins
+          apiGroup: rbac.authorization.k8s.io
+  providerConfigRef:
+    name: ops-pilot-1

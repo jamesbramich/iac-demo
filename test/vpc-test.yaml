@@ -1,0 +1,10 @@
+apiVersion: aws.platform.nofrixion.com/v1alpha1
+kind: Network
+metadata:
+  name: vpc-test-2
+  namespace: ops-pilot
+spec:
+  compositeDeletePolicy: Foreground
+  parameters:
+    id: vpc-test-2
+    region: eu-west-1
