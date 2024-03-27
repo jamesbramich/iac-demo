@@ -1,0 +1,12 @@
+apiVersion: aws.platform.nofrixion.com/v1alpha1
+kind: Network
+metadata:
+  name: network-test
+  namespace: ops-cluster
+spec:
+  compositeDeletePolicy: Foreground
+  parameters:
+    id: network-test
+    region: eu-west-1
+  writeConnectionSecretToRef:
+    name: network-test

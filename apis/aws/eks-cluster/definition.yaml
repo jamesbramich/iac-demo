@@ -63,6 +63,29 @@ spec:
                           description: The AutoScaler Role ARN to connect as ClusterAdmin.
                           type: string
                           default: autoscalerArn
+                    identityProvider:
+                      type: object
+                      description: Configuration for adding EntraID as an OIDC identity provider with the cluster.
+                      properties:
+                        clientId:
+                          description: Client ID of enterprise application set up for OIDC provider in EntraID
+                          type: string
+                        issuerUrl:
+                          description: Issuer URL of enterprise application set up for OIDC provider in EntraID
+                          type: string
+                        groupsClaim:
+                          type: string
+                          default: groups
+                        usernameClaim:
+                          type: string
+                          default: upn
+                        adminGroupId:
+                          description: Azure EntraID group object ID for group to add to 'cluster-admin' 
+                          type: string
+                      required:
+                        - clientId
+                        - issuerUrl
+                        - adminGroupId
                     deletionPolicy:
                       description: Delete the external resources when the Claim/XR is deleted. Defaults to Delete
                       enum:
@@ -99,6 +122,7 @@ spec:
                         - instanceType
                   required:
                     - id
+                    - identityProvider
                     - region
                     - deletionPolicy
                     - providerConfigName

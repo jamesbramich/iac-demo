@@ -17,6 +17,8 @@ metadata:
 spec:
   connectionSecretKeys:
     - kubeconfig
+  defaultCompositionRef:
+    name: xnetwork-eks
   group: aws.platform.nofrixion.com
   names:
     kind: XNetwork

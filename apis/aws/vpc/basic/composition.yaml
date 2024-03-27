@@ -1,14 +1,10 @@
 #------------------------------------------------------------------------------
 # Filename: composition.yaml
 #
-# Description: Composition for EKS compliant VPC. Based on:
+# Description: Composition for basic VPC which will run EKS cluster (no NAT gateway, only two availability zones). Based on:
 #                  https://github.com/upbound/configuration-aws-network/blob/main/apis/basic/composition.yaml
 #
 # Author: James Bramich (james@nofrixion.com)
-#
-# TODO
-# - add subnets for 3rd availablity zone
-# - add NAT gateway
 #
 # History:
 # 25 March      2024  James Bramich   Created, Northdown, Tasmania
@@ -16,10 +12,10 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: xnetwork.aws.platform.nofrixion.com
+  name: xnetwork-basic
   labels:
     provider: aws
-    type: eks-3-zone
+    type: basic
 spec:
   writeConnectionSecretsToNamespace: crossplane-system
   compositeTypeRef:

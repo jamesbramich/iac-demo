@@ -7,11 +7,7 @@
 # Author: James Bramich (james@nofrixion.com)
 #
 # TODO
-# - add additional core services/operators:
-#     - entraID OIDC integration (from ../../ops-cluster/entra-id-oidc-provider.yaml)
-#     - Cluster AutoScaler
-#     - Cert manager
-#     - RabbitMQ(?)
+# - entraID OIDC integration only specifies an Admin group from EntraID, this could be more flexible
 # 
 # History:
 # 25 March      2024  James Bramich   Created, Northdown, Tasmania
@@ -194,22 +190,70 @@ spec:
                 toFieldPath: status.eks.clusterSecurityGroupId
                 type: ToCompositeFieldPath
 
-# TEST this as seperate manifest first
-#          - name: identityProviderConfig
-#            base:
-#              apiVersion: eks.aws.upbound.io/v1beta1
-#              kind: IdentityProviderConfig
-#              metadata:
-#                annotations:
-#                  uptest.upbound.io/timeout: "3600"
-#                name: entraIdOidcProvider
-#              spec:
-#                forProvider:
-#                  clusterName: test
-#                  oidc:
-#                    - clientId: test-audience
-#                      issuerUrl: https://issuer.url
-#                  region: us-west-1
+# This should really be optional, but for now is required.
+          - name: identityProviderConfig
+            base:
+              apiVersion: eks.aws.upbound.io/v1beta1
+              kind: IdentityProviderConfig
+              metadata:
+                annotations:
+                  uptest.upbound.io/timeout: "3600"
+              spec:
+                forProvider:
+                  clusterNameSelector:
+                    matchControllerRef: true
+            patches:
+              - patchSetName: providerConfigRef
+                type: PatchSet
+              - patchSetName: deletionPolicy
+                type: PatchSet
+              - patchSetName: region
+                type: PatchSet
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.identityProvider.clientId
+                toFieldPath: spec.forProvider.oidc[0].clientId
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.identityProvider.issuerUrl
+                toFieldPath: spec.forProvider.oidc[0].issuerUrl
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.identityProvider.usernameClaim
+                toFieldPath: spec.forProvider.oidc[0].usernameClaim
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.identityProvider.groupsClaim
+                toFieldPath: spec.forProvider.oidc[0].groupsClaim
+
+          - name: identityProviderClusterRoleBinding
+            base:
+              apiVersion: kubernetes.crossplane.io/v1alpha2
+              kind: Object
+              spec:
+                forProvider:
+                  manifest:
+                    apiVersion: rbac.authorization.k8s.io/v1
+                    kind: ClusterRoleBinding
+                    roleRef:
+                      apiGroup: rbac.authorization.k8s.io
+                      kind: ClusterRole
+                      name: cluster-admin
+                    subjects:
+                      - kind: Group
+                        apiGroup: rbac.authorization.k8s.io
+            patches:
+              - patchSetName: deletionPolicy
+                type: PatchSet
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.id
+                toFieldPath: spec.providerConfigRef.name
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.identityProvider.adminGroupId
+                toFieldPath: spec.forProvider.manifest.subjects[0].name
+              - fromFieldPath: spec.parameters.id
+                toFieldPath: metadata.name
+                transforms:
+                  - string:
+                      fmt: '%s-entra-id-admins-cluster-rolebinding'
+                      type: Format
+                    type: string
 
           - name: clusterSecurityGroupImport
             base:
@@ -649,6 +693,24 @@ spec:
                 toFieldPath: spec.forProvider.manifest.data.mapUsers
                 type: CombineFromComposite
 
+          - name: usageXNetworkByEKSCluster
+            base:
+              apiVersion: apiextensions.crossplane.io/v1alpha1
+              kind: Usage
+              spec:
+                by:
+                  apiVersion: eks.aws.upbound.io/v1beta1
+                  kind: Cluster
+                  resourceSelector:
+                    matchControllerRef: true
+                of:
+                  apiVersion: aws.platform.nofrixion.com/v1alpha1
+                  kind: XNetwork
+                  resourceSelector:
+                    matchControllerRef: true
+            readinessChecks:
+              - type: None
+                        
           - name: usageXEksByArbitraryLabeledRelease
             base:
               apiVersion: apiextensions.crossplane.io/v1alpha1
@@ -657,6 +719,25 @@ spec:
                 by:
                   apiVersion: helm.crossplane.io/v1beta1
                   kind: Release
+                  resourceSelector:
+                    matchLabels:
+                      platform.upbound.io/deletion-ordering: enabled
+                of:
+                  apiVersion: eks.aws.upbound.io/v1beta1
+                  kind: Cluster
+                  resourceSelector:
+                    matchControllerRef: true
+            readinessChecks:
+              - type: None
+                        
+          - name: usageXEksByArbitraryLabeledObject
+            base:
+              apiVersion: apiextensions.crossplane.io/v1alpha1
+              kind: Usage
+              spec:
+                by:
+                  apiVersion: kubernetes.crossplane.io/v1alpha2
+                  kind: Object
                   resourceSelector:
                     matchLabels:
                       platform.upbound.io/deletion-ordering: enabled

@@ -24,6 +24,11 @@ spec:
       # roleArn: arn:aws:iam::123456789:role/AWSReservedSSO_AdministratorAccess_d703c73ed340fde7
       # roleArn: ${data.aws_eks_iam_default_admin}
       roleArn: arn:aws:iam::145259453615:role/AWSReservedSSO_AdministratorAccess_d3980a6c9782fd6d
+    # EntraID integration
+    identityProvider:
+      clientId: f2653318-e686-4fd1-85ec-5cf692ba0b20
+      issuerUrl: https://sts.windows.net/97c78528-728a-4eb7-b50e-ee7aced0a1ce/
+      adminGroupId: efaddfcc-7846-48db-a87b-62a211452c74 # NoFrixion-SysAdmins
     nodes:
       count: 3
       instanceType: t3.small

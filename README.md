@@ -66,8 +66,19 @@ kubectl apply -f crossplane/platform-ref-aws.yaml -n crossplane-system
 kubectl apply -f crossplane/provider-config-aws.yaml -n crossplane-system
 ```
 
+## Get KUBECONFIG details from crossplane generated secret ##
+
+```bash
+# Set secret name to the appopriate value 
+SECRETNAME=$(kubectl -n crossplane-system get secret -o name | grep ekscluster)
+kubectl --namespace crossplane-system get $SECRETNAME --output jsonpath="{.data.kubeconfig}" | base64 -d >kubeconfig.txt
+```
+
+Once you have the kubeconfig data, merge the Cluster and Context details into an existing `.kube/config` file. Change the user in the `context` to be the azure user used for authenticating with other clusters.
+
 ## REFERENCES ##
 
+* Anton Putra's [tutorial for creating VPC and deploying EKS](https://youtu.be/mpfqPXfX6mg?si=VK0LR-SfwYGGs6KO) - basically what we want but with only two subnet pairs instead of three.
 * [GitOps model for provisioning and bootstrapping Amazon EKS clusters using Crossplane and Argo CD](https://aws.amazon.com/blogs/containers/gitops-model-for-provisioning-and-bootstrapping-amazon-eks-clusters-using-crossplane-and-argo-cd/) - see section, `Amazon EKS cluster provisioning using Crossplane`
 * A video showing how to use a temporary local cluster to bootstrap [Crossplane to manage Crossplane](https://youtu.be/IlaYGgyg06o?si=mXM9p73MyrLCd8gA)
 * AWS Blueprints (community provider)
