@@ -7,7 +7,7 @@
 # Author: James Bramich (james@nofrixion.com)
 #
 # TODO
-# - entraID OIDC integration only specifies an Admin group from EntraID, this could be more flexible
+# - remove security group rules for database access (hangover from reference architecture)
 # 
 # History:
 # 25 March      2024  James Bramich   Created, Northdown, Tasmania
@@ -202,6 +202,8 @@ spec:
                 forProvider:
                   clusterNameSelector:
                     matchControllerRef: true
+                  tags:
+                    Name: nofrixion-azure-entra-id
             patches:
               - patchSetName: providerConfigRef
                 type: PatchSet
@@ -336,6 +338,14 @@ spec:
                 type: PatchSet
               - patchSetName: deletionPolicy
                 type: PatchSet
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.id
+                toFieldPath: spec.forProvider.tags["Name"]
+                transforms:
+                  - type: string
+                    string:
+                      fmt: 'nofrixion_NodeGroupRole_%s-cluster'
+                      type: Format
               - fromFieldPath: status.atProvider.arn
                 policy:
                   fromFieldPath: Optional
@@ -376,23 +386,6 @@ spec:
               - patchSetName: deletionPolicy
                 type: PatchSet
 
-          - name: ebsCsiRolePolicyAttachment
-            base:
-              apiVersion: iam.aws.upbound.io/v1beta1
-              kind: RolePolicyAttachment
-              spec:
-                forProvider:
-                  policyArn: arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy
-                  roleSelector:
-                    matchControllerRef: true
-                    matchLabels:
-                      role: nodegroup
-            patches:
-              - patchSetName: providerConfigRef
-                type: PatchSet
-              - patchSetName: deletionPolicy
-                type: PatchSet
-
           - name: containerRegistryRolePolicyAttachment
             base:
               apiVersion: iam.aws.upbound.io/v1beta1
@@ -410,7 +403,7 @@ spec:
               - patchSetName: deletionPolicy
                 type: PatchSet
 
-          - name: nodeGroupPublic
+          - name: nodeGroupPrivate
             base:
               apiVersion: eks.aws.upbound.io/v1beta1
               kind: NodeGroup
@@ -419,7 +412,7 @@ spec:
                   clusterNameSelector:
                     matchControllerRef: true
                   instanceTypes:
-                    - t3.medium
+                    - t3.small
                   nodeRoleArnSelector:
                     matchControllerRef: true
                     matchLabels:
@@ -430,7 +423,7 @@ spec:
                       minSize: 1
                   subnetIdSelector:
                     matchLabels:
-                      access: public
+                      access: private
             patches:
               - patchSetName: providerConfigRef
                 type: PatchSet
@@ -452,6 +445,81 @@ spec:
                   fromFieldPath: Optional
                 toFieldPath: status.eks.clusterName
                 type: ToCompositeFieldPath
+
+          - name: ebsCsiAddonRole
+            base:
+              apiVersion: iam.aws.upbound.io/v1beta1
+              kind: Role
+              metadata:
+                labels:
+                  role: ebsCsiAddon
+              spec:
+                forProvider:
+                  assumeRolePolicy: ""
+            patches:
+              - patchSetName: providerConfigRef
+                type: PatchSet
+              - patchSetName: deletionPolicy
+                type: PatchSet
+              - type: CombineFromComposite
+                toFieldPath: spec.forProvider.assumeRolePolicy
+                combine:
+                  variables:
+                  - fromFieldPath: status.eks.accountId
+                  - fromFieldPath: status.eks.oidcUri
+                  - fromFieldPath: status.eks.oidcUri
+                  - fromFieldPath: status.eks.oidcUri
+                  strategy: string
+                  string:
+                    fmt: |
+                      {
+                        "Version": "2012-10-17",
+                        "Statement": [
+                          {
+                            "Effect": "Allow",
+                            "Principal": {
+                              "Federated": "arn:aws:iam::%s:oidc-provider/%s"
+                            },
+                            "Action": "sts:AssumeRoleWithWebIdentity",
+                            "Condition": {
+                              "StringEquals": {
+                                "%s:aud": "sts.amazonaws.com",
+                                "%s:sub": "system:serviceaccount:kube-system:ebs-csi-controller-sa"
+                              }
+                            }
+                          }
+                        ]
+                      }
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.id
+                toFieldPath: spec.forProvider.tags["Name"]
+                transforms:
+                  - type: string
+                    string:
+                      fmt: 'nofrixion_EBS_CSI_DriverRole_%s-cluster'
+                      type: Format
+              - fromFieldPath: status.atProvider.arn
+                policy:
+                  fromFieldPath: Optional
+                toFieldPath: status.eks.ebsCsiAddonRoleArn
+                type: ToCompositeFieldPath
+
+          - name: ebsCsiRolePolicyAttachment
+            base:
+              apiVersion: iam.aws.upbound.io/v1beta1
+              kind: RolePolicyAttachment
+              spec:
+                forProvider:
+                  policyArn: arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy
+                  roleSelector:
+                    matchControllerRef: true
+                    matchLabels:
+                      role: ebsCsiAddon
+            patches:
+              - patchSetName: providerConfigRef
+                type: PatchSet
+              - patchSetName: deletionPolicy
+                type: PatchSet
 
           - name: ebsCsiAddon
             base:
@@ -480,16 +548,90 @@ spec:
                     type: string
                 type: FromCompositeFieldPath
 
-          - name: cniAddon
+          - name: efsCsiAddonRole
+            base:
+              apiVersion: iam.aws.upbound.io/v1beta1
+              kind: Role
+              metadata:
+                labels:
+                  role: efsCsiAddon
+              spec:
+                forProvider:
+                  assumeRolePolicy: ""
+            patches:
+              - patchSetName: providerConfigRef
+                type: PatchSet
+              - patchSetName: deletionPolicy
+                type: PatchSet
+              - type: CombineFromComposite
+                toFieldPath: spec.forProvider.assumeRolePolicy
+                combine:
+                  variables:
+                  - fromFieldPath: status.eks.accountId
+                  - fromFieldPath: status.eks.oidcUri
+                  - fromFieldPath: status.eks.oidcUri
+                  - fromFieldPath: status.eks.oidcUri
+                  strategy: string
+                  string:
+                    fmt: |
+                      {
+                        "Version": "2012-10-17",
+                        "Statement": [
+                          {
+                            "Effect": "Allow",
+                            "Principal": {
+                              "Federated": "arn:aws:iam::%s:oidc-provider/%s"
+                            },
+                            "Action": "sts:AssumeRoleWithWebIdentity",
+                            "Condition": {
+                              "StringEquals": {
+                                "%s:aud": "sts.amazonaws.com",
+                                "%s:sub": "system:serviceaccount:kube-system:efs-csi-*"
+                              }
+                            }
+                          }
+                        ]
+                      }
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.id
+                toFieldPath: spec.forProvider.tags["Name"]
+                transforms:
+                  - type: string
+                    string:
+                      fmt: 'nofrixion_EFS_CSI_DriverRole_%s-cluster'
+                      type: Format
+              - fromFieldPath: status.atProvider.arn
+                policy:
+                  fromFieldPath: Optional
+                toFieldPath: status.eks.efsCsiAddonRoleArn
+                type: ToCompositeFieldPath
+
+          - name: efsCsiRolePolicyAttachment
+            base:
+              apiVersion: iam.aws.upbound.io/v1beta1
+              kind: RolePolicyAttachment
+              spec:
+                forProvider:
+                  policyArn: arn:aws:iam::aws:policy/service-role/AmazonEFSCSIDriverPolicy 
+                  roleSelector:
+                    matchControllerRef: true
+                    matchLabels:
+                      role: efsCsiAddon
+            patches:
+              - patchSetName: providerConfigRef
+                type: PatchSet
+              - patchSetName: deletionPolicy
+                type: PatchSet
+
+          - name: efsCsiAddon
             base:
               apiVersion: eks.aws.upbound.io/v1beta1
               kind: Addon
               spec:
                 forProvider:
-                  addonName: vpc-cni
+                  addonName: aws-efs-csi-driver
                   clusterNameSelector:
                     matchControllerRef: true
-                  preserve: false
             patches:
               - patchSetName: providerConfigRef
                 type: PatchSet
@@ -503,7 +645,7 @@ spec:
                 toFieldPath: metadata.annotations[crossplane.io/external-name]
                 transforms:
                   - string:
-                      fmt: '%s:vpc-cni'
+                      fmt: '%s:aws-efs-csi-driver'
                       type: Format
                     type: string
                 type: FromCompositeFieldPath

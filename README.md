@@ -9,6 +9,7 @@ Compared to the likes of Terraform and Pulumi, [Crossplane](https://www.crosspla
 
 This pilot uses a local microk8s cluster, but can be applied using any local kubernetes flavour e.g. kind, k3s, minikube etc. I had issues with Rancher desktop messing with my existing confg so went with microk8s in WSL2.
 
+The initial strategy is to create a configuration to deploy the base cluster for EKS then follow that with required services e.g. cert-manager, cluster-autoscaler, external-secrets-operator etc. This means a move to a different CSP will only require the cluster deployment to change.
 
 ## Initial setup ##
 
@@ -66,7 +67,7 @@ kubectl apply -f crossplane/platform-ref-aws.yaml -n crossplane-system
 kubectl apply -f crossplane/provider-config-aws.yaml -n crossplane-system
 ```
 
-## Get KUBECONFIG details from crossplane generated secret ##
+### Get KUBECONFIG details from crossplane generated secret ###
 
 ```bash
 # Set secret name to the appopriate value 
@@ -75,6 +76,12 @@ kubectl --namespace crossplane-system get $SECRETNAME --output jsonpath="{.data.
 ```
 
 Once you have the kubeconfig data, merge the Cluster and Context details into an existing `.kube/config` file. Change the user in the `context` to be the azure user used for authenticating with other clusters.
+
+## Deleting 'stuck' resources ##
+
+This mostly happens during testing but, in case of emergency remove `finalisers` from the managed resource e.g.
+
+`kubectl patch cluster ops-pilot-cluster-wpcsc-ggspf -p '{"metadata":{"finalizers": []}}' --type=merge`
 
 ## REFERENCES ##
 
