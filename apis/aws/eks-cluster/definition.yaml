@@ -15,11 +15,12 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
 metadata:
-  name: xclusters.aws.platform.nofrixion.com
+  name: xclusters.aws.nofrixion.com
 spec:
   connectionSecretKeys:
     - kubeconfig
-  group: aws.platform.nofrixion.com
+  defaultCompositionUpdatePolicy: Manual
+  group: aws.nofrixion.com
   names:
     kind: XCluster
     plural: xclusters
@@ -86,6 +87,46 @@ spec:
                         - clientId
                         - issuerUrl
                         - adminGroupId
+                    existingNetwork:
+                      type: object
+                      description: Only required if crossplane is to assume management of an existing VPC
+                      properties:
+                        vpcId:
+                          type: string
+                        publicSubnetIds:
+                          type: array
+                          items:
+                            type: string
+                        privateSubnetIds:
+                          type: array
+                          items:
+                            type: string
+                        internetGatewayId:
+                          type: string
+                        natGatewayId:
+                          type: string
+                        eipAllocationId:
+                          type: string
+                        privateRouteTableId:
+                          type: string
+                        privateRouteId:
+                          type: string
+                        publicRouteTableId:
+                          type: string
+                        publicRouteId:
+                          type: string
+                        mainRouteTableAssociationId:
+                          type: string
+                        publicRouteTableAssociationIds:
+                          type: array
+                          description: Public route table associations in order from zone a->c
+                          items:
+                            type: string
+                        privateRouteTableAssociationIds:
+                          type: array
+                          description: Private route table associations in order from zone a->c
+                          items:
+                            type: string
                     deletionPolicy:
                       description: Delete the external resources when the Claim/XR is deleted. Defaults to Delete
                       enum:

@@ -16,11 +16,11 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: xclusters.aws.platform.nofrixion.com
+  name: xclusters.aws.nofrixion.com
 spec:
   writeConnectionSecretsToNamespace: crossplane-system
   compositeTypeRef:
-    apiVersion: aws.platform.nofrixion.com/v1alpha1
+    apiVersion: aws.nofrixion.com/v1alpha1
     kind: XCluster
   mode: Pipeline
   pipeline:
@@ -49,7 +49,7 @@ spec:
         resources:
           - name: XNetwork
             base:
-              apiVersion: aws.platform.nofrixion.com/v1alpha1
+              apiVersion: aws.nofrixion.com/v1alpha1
               kind: XNetwork
             patches:
               - type: FromCompositeFieldPath
@@ -58,6 +58,9 @@ spec:
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.parameters.id
                 toFieldPath: spec.parameters.id
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.existingNetwork
+                toFieldPath: spec.parameters.existingNetwork
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.parameters.region
                 toFieldPath: spec.parameters.region
@@ -107,6 +110,14 @@ spec:
                 type: PatchSet
               - patchSetName: deletionPolicy
                 type: PatchSet
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.id
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
+                transforms:
+                  - type: string
+                    string:
+                      fmt: '%s-cluster-role'
+                      type: Format
 
           - name: clusterRolePolicyAttachment
             base:
@@ -124,6 +135,14 @@ spec:
                 type: PatchSet
               - patchSetName: deletionPolicy
                 type: PatchSet
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.id
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
+                transforms:
+                  - type: string
+                    string:
+                      fmt: '%s-cluster-rolepolicyattachment'
+                      type: Format
 
           - name: kubernetesCluster
             base:
@@ -223,6 +242,14 @@ spec:
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.parameters.identityProvider.groupsClaim
                 toFieldPath: spec.forProvider.oidc[0].groupsClaim
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.id
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
+                transforms:
+                  - type: string
+                    string:
+                      fmt: '%s-identity-provider-config'
+                      type: Format
 
           - name: identityProviderClusterRoleBinding
             base:
@@ -256,6 +283,14 @@ spec:
                       fmt: '%s-entra-id-admins-cluster-rolebinding'
                       type: Format
                     type: string
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.id
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
+                transforms:
+                  - type: string
+                    string:
+                      fmt: '%s-admin-cluster-role-binding'
+                      type: Format
 
           - name: clusterSecurityGroupImport
             base:
@@ -306,6 +341,14 @@ spec:
                       type: Format
                     type: string
                 type: FromCompositeFieldPath
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.id
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
+                transforms:
+                  - type: string
+                    string:
+                      fmt: '%s-cluster-auth'
+                      type: Format
 
           - name: nodegroupRole
             base:
@@ -351,6 +394,14 @@ spec:
                   fromFieldPath: Optional
                 toFieldPath: status.eks.nodeGroupRoleArn
                 type: ToCompositeFieldPath
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.id
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
+                transforms:
+                  - type: string
+                    string:
+                      fmt: '%s-nodegroup-role'
+                      type: Format
 
           - name: workerNodeRolePolicyAttachment
             base:
@@ -368,6 +419,14 @@ spec:
                 type: PatchSet
               - patchSetName: deletionPolicy
                 type: PatchSet
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.id
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
+                transforms:
+                  - type: string
+                    string:
+                      fmt: '%s-nodegroup-rolepolicyattachment'
+                      type: Format
 
           - name: cniRolePolicyAttachment
             base:
@@ -385,6 +444,14 @@ spec:
                 type: PatchSet
               - patchSetName: deletionPolicy
                 type: PatchSet
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.id
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
+                transforms:
+                  - type: string
+                    string:
+                      fmt: '%s-cni-rolepolicyattachment'
+                      type: Format
 
           - name: containerRegistryRolePolicyAttachment
             base:
@@ -402,6 +469,14 @@ spec:
                 type: PatchSet
               - patchSetName: deletionPolicy
                 type: PatchSet
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.id
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
+                transforms:
+                  - type: string
+                    string:
+                      fmt: '%s-cont-registry-rolepolicyattachment'
+                      type: Format
 
           - name: nodeGroupPrivate
             base:
@@ -445,6 +520,14 @@ spec:
                   fromFieldPath: Optional
                 toFieldPath: status.eks.clusterName
                 type: ToCompositeFieldPath
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.id
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
+                transforms:
+                  - type: string
+                    string:
+                      fmt: '%s-nodegroup1'
+                      type: Format
 
           - name: ebsCsiAddonRole
             base:
@@ -503,6 +586,14 @@ spec:
                   fromFieldPath: Optional
                 toFieldPath: status.eks.ebsCsiAddonRoleArn
                 type: ToCompositeFieldPath
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.id
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
+                transforms:
+                  - type: string
+                    string:
+                      fmt: '%s-ebs-csi-role'
+                      type: Format
 
           - name: ebsCsiRolePolicyAttachment
             base:
@@ -520,6 +611,14 @@ spec:
                 type: PatchSet
               - patchSetName: deletionPolicy
                 type: PatchSet
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.id
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
+                transforms:
+                  - type: string
+                    string:
+                      fmt: '%s-ebs-csi-rolepolicyattachment'
+                      type: Format
 
           - name: ebsCsiAddon
             base:
@@ -605,6 +704,14 @@ spec:
                   fromFieldPath: Optional
                 toFieldPath: status.eks.efsCsiAddonRoleArn
                 type: ToCompositeFieldPath
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.id
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
+                transforms:
+                  - type: string
+                    string:
+                      fmt: '%s-efs-csi-role'
+                      type: Format
 
           - name: efsCsiRolePolicyAttachment
             base:
@@ -622,6 +729,14 @@ spec:
                 type: PatchSet
               - patchSetName: deletionPolicy
                 type: PatchSet
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.id
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
+                transforms:
+                  - type: string
+                    string:
+                      fmt: '%s-efs-csi-rolepolicyattachment'
+                      type: Format
 
           - name: efsCsiAddon
             base:
@@ -713,9 +828,14 @@ spec:
                     key: kubeconfig
                   source: Secret
             patches:
-              - fromFieldPath: spec.parameters.id
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.id
                 toFieldPath: metadata.name
-                type: FromCompositeFieldPath
+                transforms:
+                  - string:
+                      fmt: '%s-k8s-provider'
+                      type: Format
+                    type: string
               - fromFieldPath: spec.writeConnectionSecretToRef.namespace
                 toFieldPath: spec.credentials.secretRef.namespace
                 type: FromCompositeFieldPath
@@ -735,7 +855,6 @@ spec:
               apiVersion: kubernetes.crossplane.io/v1alpha2
               kind: Object
               spec:
-                deletionPolicy: Orphan
                 forProvider:
                   manifest:
                     apiVersion: v1
@@ -774,7 +893,6 @@ spec:
               apiVersion: kubernetes.crossplane.io/v1alpha2
               kind: Object
               spec:
-                deletionPolicy: Orphan
                 forProvider:
                   manifest:
                     apiVersion: v1
@@ -846,7 +964,7 @@ spec:
                   resourceSelector:
                     matchControllerRef: true
                 of:
-                  apiVersion: aws.platform.nofrixion.com/v1alpha1
+                  apiVersion: aws.nofrixion.com/v1alpha1
                   kind: XNetwork
                   resourceSelector:
                     matchControllerRef: true
@@ -872,21 +990,20 @@ spec:
             readinessChecks:
               - type: None
                         
-          - name: usageXEksByArbitraryLabeledObject
+          - name: usageXEksByK8sProviderConfig
             base:
               apiVersion: apiextensions.crossplane.io/v1alpha1
               kind: Usage
               spec:
-                by:
-                  apiVersion: kubernetes.crossplane.io/v1alpha2
-                  kind: Object
-                  resourceSelector:
-                    matchLabels:
-                      platform.upbound.io/deletion-ordering: enabled
                 of:
                   apiVersion: eks.aws.upbound.io/v1beta1
                   kind: Cluster
                   resourceSelector:
                     matchControllerRef: true
+                by:
+                  apiVersion: kubernetes.crossplane.io/v1alpha1
+                  kind: ProviderConfig
+                  resourceRef:
+                   name: providerConfigKubernetes
             readinessChecks:
               - type: None
