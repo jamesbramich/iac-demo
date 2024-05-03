@@ -7,13 +7,22 @@ Compared to the likes of Terraform and Pulumi, [Crossplane](https://www.crosspla
 - leveraging our existing k8s skillset
 - making use of a large and growing k8s ecosystem
 
-This pilot uses a local microk8s cluster, but can be applied using any local kubernetes flavour e.g. kind, k3s, minikube etc. I had issues with Rancher desktop messing with my existing confg so went with microk8s in WSL2.
-
 The initial strategy is to create a configuration to deploy the base cluster for EKS then follow that with required services e.g. cert-manager, cluster-autoscaler, external-secrets-operator etc. This means a move to a different CSP will only require the cluster deployment to change.
 
 ## Initial setup ##
 
-### Install local microk8s cluster ###
+A kubernetes cluster is required to run crossplane. The initial deployent process can be summarised as:
+
+1. deploy local kubernetes cluster
+2. install crossplane, dependencies and apis
+3. deploy [management cluster manifests](./it-ops-cluster/it-ops-cluster.yaml) to EKS
+    - add management cluster details to `~/.kube/config`
+    - repeat step 2 above on the management cluster 
+    - add the existing vpc id's to the management cluster manifests and deploy into management cluster
+
+### Install local kubernetes cluster ###
+
+This pilot uses a local microk8s cluster, but can be applied using any local kubernetes flavour e.g. kind, k3s, minikube etc. I had issues with Rancher desktop messing with my existing confg so went with microk8s in WSL2.
 
 See [MicroK8s docs](https://microk8s.io/docs/install-wsl2) for details. 
 
@@ -58,14 +67,21 @@ kubectl create secret generic aws-secret -n crossplane-system --from-file=creds=
 
 For full details see the [AWS Quickstart](https://docs.crossplane.io/latest/getting-started/provider-aws/) has section on setting up a kubernetes secret using an AWS Access Key linked to your account.
 
-### Install AWS Providers via reference platform ###
+### Install AWS Providers & NoFrixion apis###
 
-Some examples refer to a 'monolithic' `provider-aws` package. This is being deprecated in June 2024. The [`aws provider family`](https://marketplace.upbound.io/providers/upbound/provider-family-aws) should be used instead. The necessary providers can be installed via the Upbound [reference platform for AWS](https://github.com/upbound/platform-ref-aws).
+The necessary providers, configurations and functions can be installed via the [crossplane/dependencies.yaml](./crossplane/dependencies.yaml).
 
 ```bash
-kubectl apply -f crossplane/platform-ref-aws.yaml -n crossplane-system
+# Crossplane configurations for aws eks and networks install the necessary providers and functions.
+kubectl apply -f crossplane/dependencies.yaml -n crossplane-system
 kubectl apply -f crossplane/provider-config-aws.yaml -n crossplane-system
+
+# Install NoFrixion composite resource definitions and compositions (could package these at some point)
+kubectl apply -f apis/aws/vpc/
+kubectl apply -f apis/aws/eks-cluster/
 ```
+
+* Note, some online examples refer to a 'monolithic' `provider-aws` package. This is being deprecated in June 2024. The [`aws provider family`](https://marketplace.upbound.io/providers/upbound/provider-family-aws) packages installed by using the dependencies file above should be used instead. 
 
 ### Get KUBECONFIG details from crossplane generated secret ###
 

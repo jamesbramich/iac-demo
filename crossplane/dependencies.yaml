@@ -1,0 +1,69 @@
+#------------------------------------------------------------------------------
+# Filename: dependencies.yaml
+#
+# Description: Installs dependencies (provider, configurations and functions)  
+#              used in NoFrixion crossplane deployments
+#
+# Usage:       kubectl apply -f dependencies.yaml
+#
+# Author(s): James Bramich (james@nofrixion.com)
+#
+# History:
+#  2 May        2024  James Bramich   Created, Northdown, Tasmania
+#-----------------------------------------------------------------------------
+
+#apiVersion: pkg.crossplane.io/v1
+#kind: Provider
+#metadata:
+#  name: upbound-provider-aws-ec2
+#spec:
+#  package: xpkg.upbound.io/upbound/provider-aws-ec2:v1.2.0
+#---
+#apiVersion: pkg.crossplane.io/v1
+#kind: Provider
+#metadata:
+#  name: upbound-provider-aws-iam
+#spec:
+#  package: xpkg.upbound.io/upbound/provider-aws-iam:v1.2.0
+#---
+#apiVersion: pkg.crossplane.io/v1
+#kind: Provider
+#metadata:
+#  name: upbound-provider-aws-eks
+#spec:
+#  package: xpkg.upbound.io/upbound/provider-aws-eks:v1.2.0
+#---
+#apiVersion: pkg.crossplane.io/v1
+#kind: Provider
+#metadata:
+#  name: crossplane-contrib-provider-helm
+#spec:
+#  package: xpkg.upbound.io/crossplane-contrib/provider-helm:v0.17.0
+#---
+#apiVersion: pkg.crossplane.io/v1
+#kind: Provider
+#metadata:
+#  name: crossplane-contrib-provider-kubernetes
+#spec:
+#  package: xpkg.upbound.io/crossplane-contrib/provider-kubernetes:v0.12.1
+#---
+#apiVersion: pkg.crossplane.io/v1beta1
+#kind: Function
+#metadata:
+#  name: crossplane-contrib-function-patch-and-transform
+#spec:
+#  package: xpkg.upbound.io/crossplane-contrib/function-patch-and-transform:v0.4.0
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Configuration
+metadata:
+  name: upbound-configuration-aws-network
+spec:
+  package: xpkg.upbound.io/upbound/configuration-aws-network:v0.13.0
+---
+apiVersion: pkg.crossplane.io/v1
+kind: Configuration
+metadata:
+  name: upbound-configuration-aws-eks
+spec:
+  package: xpkg.upbound.io/upbound/configuration-aws-eks:v0.11.0

@@ -8,15 +8,15 @@
 # History:
 # 25 March      2024  James Bramich   Created, Northdown, Tasmania
 #-----------------------------------------------------------------------------
-apiVersion: aws.platform.nofrixion.com/v1alpha1
+apiVersion: aws.nofrixion.com/v1alpha1
 kind: Cluster
 metadata:
-  name: ops-pilot-cluster
-  namespace: ops-cluster
+  name: it-ops-cluster
+  namespace: it-ops-cluster
 spec:
   compositeDeletePolicy: Foreground
   parameters:
-    id: ops-pilot-1
+    id: it-ops-1
     region: eu-west-1
     version: "1.28"
     iam:
@@ -33,4 +33,4 @@ spec:
       count: 3
       instanceType: t3.small
   writeConnectionSecretToRef:
-    name: ops-cluster-aws-kubeconfig
+    name: it-ops-cluster-aws-kubeconfig

@@ -1,0 +1,32 @@
+apiVersion: meta.pkg.crossplane.io/v1alpha1
+kind: Configuration
+metadata:
+  name: nofrixion-iac
+  annotations:
+    meta.crossplane.io/maintainer: NoFrixon <operations@nofrixoin.com>
+    meta.crossplane.io/source: internal
+    meta.crossplane.io/license: Apache-2.0
+    meta.crossplane.io/description: |
+      Library of crossplane composite resource definititions and compositions used to deploy NoFrixion infrastructure.
+    meta.crossplane.io/readme: |
+      This configuration bundles NoFrixion's crossplane composite resource definititions, compositions and necessary dependencies into an installable configuration package
+spec:
+  crossplane:
+    version: ">=v1.15.1-0"
+  dependsOn:
+    - configuration: xpkg.upbound.io/upbound/configuration-aws-network
+      version: "v0.13.0"
+    - configuration: xpkg.upbound.io/upbound/configuration-aws-eks
+      version: "v0.11.0"
+    - provider: xpkg.upbound.io/crossplane-contrib/provider-helm
+      version: "v0.18.1"
+    - provider: xpkg.upbound.io/crossplane-contrib/provider-kubernetes
+      version: "v0.13.0"
+    - provider: xpkg.upbound.io/upbound/provider-aws-ec2
+      version: "v1.4.0"
+    - provider: xpkg.upbound.io/upbound/provider-aws-eks
+      version: "v1.4.0"
+    - provider: xpkg.upbound.io/upbound/provider-aws-iam
+      version: "v1.4.0"
+    - function: xpkg.upbound.io/crossplane-contrib/function-patch-and-transform
+      version: "v0.5.0"

@@ -1,13 +1,10 @@
 #------------------------------------------------------------------------------
 # Filename: composition.yaml
 #
-# Description: Composition for EKS compliant VPC. Based on:
+# Description: Composition for 3 availability zone EKS compliant VPC. Based on:
 #                  https://github.com/upbound/configuration-aws-network/blob/main/apis/basic/composition.yaml
 #
-# Author: James Bramich (james@nofrixion.com)
-#
-# TODO
-# - add NAT gateway and update routes
+# Author(s): James Bramich (james@nofrixion.com)
 #
 # History:
 # 25 March      2024  James Bramich   Created, Northdown, Tasmania
@@ -15,14 +12,14 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: xnetwork-eks
+  name: xnetwork-eks.aws.nofrixion.com
   labels:
     provider: aws
     type: eks-3-zone
 spec:
   writeConnectionSecretsToNamespace: crossplane-system
   compositeTypeRef:
-    apiVersion: aws.platform.nofrixion.com/v1alpha1
+    apiVersion: aws.nofrixion.com/v1alpha1
     kind: XNetwork
   mode: Pipeline
   pipeline:
@@ -90,6 +87,9 @@ spec:
               - type: ToCompositeFieldPath
                 fromFieldPath: status.atProvider.id
                 toFieldPath: status.vpcId
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.existingNetwork.vpcId
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
 
           - name: internetGateway
             base:
@@ -116,6 +116,9 @@ spec:
                     string:
                       fmt: '%s-cluster/InternetGateway'
                       type: Format
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.existingNetwork.internetGatewayId
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
 
           - name: natElasticIp
             base:
@@ -141,6 +144,9 @@ spec:
                     string:
                       fmt: '%s-cluster/NATIP'
                       type: Format
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.existingNetwork.eipAllocationId
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
 
           - name: natGateway
             base:
@@ -173,6 +179,9 @@ spec:
                     string:
                       fmt: '%s-cluster/NATGateway'
                       type: Format
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.existingNetwork.natGatewayId
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
 
           - name: subnetPublicA
             base:
@@ -226,6 +235,9 @@ spec:
                   string:
                     fmt: "%s-cluster/SubnetPublic-%sa"
                 toFieldPath: spec.forProvider.tags["Name"]
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.existingNetwork.publicSubnetIds[0]
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
               - type: ToCompositeFieldPath
                 fromFieldPath: metadata.annotations[crossplane.io/external-name]
                 toFieldPath: status.subnetIds[0]
@@ -284,6 +296,9 @@ spec:
                   string:
                     fmt: "%s-cluster/SubnetPublic-%sb"
                 toFieldPath: spec.forProvider.tags["Name"]
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.existingNetwork.publicSubnetIds[1]
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
               - type: ToCompositeFieldPath
                 fromFieldPath: metadata.annotations[crossplane.io/external-name]
                 toFieldPath: status.subnetIds[1]
@@ -342,6 +357,9 @@ spec:
                   string:
                     fmt: "%s-cluster/SubnetPublic-%sc"
                 toFieldPath: spec.forProvider.tags["Name"]
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.existingNetwork.publicSubnetIds[2]
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
               - type: ToCompositeFieldPath
                 fromFieldPath: metadata.annotations[crossplane.io/external-name]
                 toFieldPath: status.subnetIds[2]
@@ -397,6 +415,9 @@ spec:
                   string:
                     fmt: "%s-cluster/SubnetPrivate-%sa"
                 toFieldPath: spec.forProvider.tags["Name"]
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.existingNetwork.privateSubnetIds[0]
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
               - type: ToCompositeFieldPath
                 fromFieldPath: metadata.annotations[crossplane.io/external-name]
                 toFieldPath: status.subnetIds[3]
@@ -452,6 +473,9 @@ spec:
                   string:
                     fmt: "%s-cluster/SubnetPrivate-%sb"
                 toFieldPath: spec.forProvider.tags["Name"]
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.existingNetwork.privateSubnetIds[1]
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
               - type: ToCompositeFieldPath
                 fromFieldPath: metadata.annotations[crossplane.io/external-name]
                 toFieldPath: status.subnetIds[4]
@@ -507,6 +531,9 @@ spec:
                   string:
                     fmt: "%s-cluster/SubnetPrivate-%sc"
                 toFieldPath: spec.forProvider.tags["Name"]
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.existingNetwork.privateSubnetIds[2]
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
               - type: ToCompositeFieldPath
                 fromFieldPath: metadata.annotations[crossplane.io/external-name]
                 toFieldPath: status.subnetIds[5]
@@ -534,6 +561,9 @@ spec:
                 patchSetName: network-id
               - type: PatchSet
                 patchSetName: region
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.existingNetwork.privateRouteTableId
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
 
           - name: route-private
             base:
@@ -557,6 +587,9 @@ spec:
                 patchSetName: network-id
               - type: PatchSet
                 patchSetName: region
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.existingNetwork.privateRouteId
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
 
           - name: routeTable-public
             base:
@@ -578,12 +611,14 @@ spec:
                 patchSetName: network-id
               - type: PatchSet
                 patchSetName: region
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.existingNetwork.publicRouteTableId
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
 
           - name: route-public
             base:
               apiVersion: ec2.aws.upbound.io/v1beta2
               kind: Route
-              metadata:
               spec:
                 forProvider:
                   destinationCidrBlock: 0.0.0.0/0
@@ -602,6 +637,9 @@ spec:
                 patchSetName: network-id
               - type: PatchSet
                 patchSetName: region
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.existingNetwork.publicRouteId
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
 
           - name: mainRouteTableAssociation
             base:
@@ -622,8 +660,11 @@ spec:
                 patchSetName: network-id
               - type: PatchSet
                 patchSetName: region
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.existingNetwork.mainRouteTableAssociationId
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
 
-          - name: routeTableAssociationPublic
+          - name: routeTableAssociationPublicA
             base:
               apiVersion: ec2.aws.upbound.io/v1beta1
               kind: RouteTableAssociation
@@ -646,6 +687,87 @@ spec:
                 patchSetName: network-id
               - type: PatchSet
                 patchSetName: region
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.region
+                toFieldPath: spec.forProvider.subnetIdSelector.matchLabels[zone]
+                transforms:
+                  - type: string
+                    string:
+                      fmt: '%sa'
+                      type: Format
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.existingNetwork.publicRouteTableAssociationIds[0]
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
+
+          - name: routeTableAssociationPublicB
+            base:
+              apiVersion: ec2.aws.upbound.io/v1beta1
+              kind: RouteTableAssociation
+              spec:
+                forProvider:
+                  routeTableIdSelector:
+                    matchControllerRef: true
+                    matchLabels:
+                      routeType: public
+                  subnetIdSelector:
+                    matchControllerRef: true
+                    matchLabels:
+                      access: public
+            patches:
+              - type: PatchSet
+                patchSetName: providerConfigRef
+              - type: PatchSet
+                patchSetName: deletionPolicy
+              - type: PatchSet
+                patchSetName: network-id
+              - type: PatchSet
+                patchSetName: region
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.region
+                toFieldPath: spec.forProvider.subnetIdSelector.matchLabels[zone]
+                transforms:
+                  - type: string
+                    string:
+                      fmt: '%sb'
+                      type: Format
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.existingNetwork.publicRouteTableAssociationIds[1]
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
+
+          - name: routeTableAssociationPublicC
+            base:
+              apiVersion: ec2.aws.upbound.io/v1beta1
+              kind: RouteTableAssociation
+              spec:
+                forProvider:
+                  routeTableIdSelector:
+                    matchControllerRef: true
+                    matchLabels:
+                      routeType: public
+                  subnetIdSelector:
+                    matchControllerRef: true
+                    matchLabels:
+                      access: public
+            patches:
+              - type: PatchSet
+                patchSetName: providerConfigRef
+              - type: PatchSet
+                patchSetName: deletionPolicy
+              - type: PatchSet
+                patchSetName: network-id
+              - type: PatchSet
+                patchSetName: region
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.region
+                toFieldPath: spec.forProvider.subnetIdSelector.matchLabels[zone]
+                transforms:
+                  - type: string
+                    string:
+                      fmt: '%sc'
+                      type: Format
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.existingNetwork.publicRouteTableAssociationIds[2]
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
 
           - name: routeTableAssociationPrivateA
             base:
@@ -678,6 +800,9 @@ spec:
                     string:
                       fmt: '%sa'
                       type: Format
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.existingNetwork.privateRouteTableAssociationIds[0]
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
 
           - name: routeTableAssociationPrivateB
             base:
@@ -710,6 +835,9 @@ spec:
                     string:
                       fmt: '%sb'
                       type: Format
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.existingNetwork.privateRouteTableAssociationIds[1]
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
 
           - name: routeTableAssociationPrivateC
             base:
@@ -742,76 +870,6 @@ spec:
                     string:
                       fmt: '%sc'
                       type: Format
-
-          - name: securityGroup
-            base:
-              apiVersion: ec2.aws.upbound.io/v1beta1
-              kind: SecurityGroup
-              spec:
-                forProvider:
-                  description: Allow access to databases
-                  name: platform-ref-aws-cluster
-                  vpcIdSelector:
-                    matchControllerRef: true
-            patches:
-              - type: PatchSet
-                patchSetName: providerConfigRef
-              - type: PatchSet
-                patchSetName: deletionPolicy
-              - type: PatchSet
-                patchSetName: network-id
-              - type: PatchSet
-                patchSetName: region
-              - type: ToCompositeFieldPath
-                fromFieldPath: metadata.annotations[crossplane.io/external-name]
-                toFieldPath: status.securityGroupIds[0]
-
-          - name: securityGroupRulePostgres
-            base:
-              apiVersion: ec2.aws.upbound.io/v1beta1
-              kind: SecurityGroupRule
-              spec:
-                forProvider:
-                  cidrBlocks:
-                    - 0.0.0.0/0
-                  description: Everywhere
-                  fromPort: 5432
-                  protocol: tcp
-                  securityGroupIdSelector:
-                    matchControllerRef: true
-                  toPort: 5432
-                  type: ingress
-            patches:
-              - type: PatchSet
-                patchSetName: providerConfigRef
-              - type: PatchSet
-                patchSetName: deletionPolicy
-              - type: PatchSet
-                patchSetName: network-id
-              - type: PatchSet
-                patchSetName: region
-
-          - name: securityGroupRuleMysql
-            base:
-              apiVersion: ec2.aws.upbound.io/v1beta1
-              kind: SecurityGroupRule
-              spec:
-                forProvider:
-                  cidrBlocks:
-                    - 0.0.0.0/0
-                  description: Everywhere
-                  fromPort: 3306
-                  protocol: tcp
-                  securityGroupIdSelector:
-                    matchControllerRef: true
-                  toPort: 3306
-                  type: ingress
-            patches:
-              - type: PatchSet
-                patchSetName: providerConfigRef
-              - type: PatchSet
-                patchSetName: deletionPolicy
-              - type: PatchSet
-                patchSetName: network-id
-              - type: PatchSet
-                patchSetName: region
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.existingNetwork.privateRouteTableAssociationIds[2]
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
