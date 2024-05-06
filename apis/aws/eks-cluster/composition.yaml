@@ -36,6 +36,16 @@ spec:
               - fromFieldPath: spec.parameters.providerConfigName
                 toFieldPath: spec.providerConfigRef.name
                 type: FromCompositeFieldPath
+          - name: kubernetesProviderConfigRef
+            patches:
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.id
+                toFieldPath: spec.providerConfigRef.name
+                transforms:
+                  - string:
+                      fmt: '%s-k8s-provider'
+                      type: Format
+                    type: string
           - name: deletionPolicy
             patches:
               - fromFieldPath: spec.parameters.deletionPolicy
@@ -173,6 +183,9 @@ spec:
               - fromFieldPath: spec.parameters.id
                 toFieldPath: spec.forProvider.vpcConfig[0].subnetIdSelector.matchLabels[networks.aws.platform.upbound.io/network-id]
                 type: FromCompositeFieldPath
+              - fromFieldPath: spec.parameters.vpcConfig.publicAccessCidrs
+                toFieldPath: spec.forProvider.vpcConfig[0].publicAccessCidrs
+                type: FromCompositeFieldPath
               - fromFieldPath: spec.parameters.version
                 toFieldPath: spec.forProvider.version
                 type: FromCompositeFieldPath
@@ -270,9 +283,8 @@ spec:
             patches:
               - patchSetName: deletionPolicy
                 type: PatchSet
-              - type: FromCompositeFieldPath
-                fromFieldPath: spec.parameters.id
-                toFieldPath: spec.providerConfigRef.name
+              - patchSetName: kubernetesProviderConfigRef
+                type: PatchSet                
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.parameters.identityProvider.adminGroupId
                 toFieldPath: spec.forProvider.manifest.subjects[0].name
@@ -333,11 +345,11 @@ spec:
               - fromFieldPath: spec.writeConnectionSecretToRef.namespace
                 toFieldPath: spec.writeConnectionSecretToRef.namespace
                 type: FromCompositeFieldPath
-              - fromFieldPath: metadata.uid
+              - fromFieldPath: spec.parameters.id
                 toFieldPath: spec.writeConnectionSecretToRef.name
                 transforms:
                   - string:
-                      fmt: '%s-ekscluster'
+                      fmt: '%s-eks-cluster-auth'
                       type: Format
                     type: string
                 type: FromCompositeFieldPath
@@ -803,15 +815,20 @@ spec:
             patches:
               - fromFieldPath: spec.parameters.id
                 toFieldPath: metadata.name
+                transforms:
+                  - string:
+                      fmt: '%s-helm-provider'
+                      type: Format
+                    type: string
                 type: FromCompositeFieldPath
               - fromFieldPath: spec.writeConnectionSecretToRef.namespace
                 toFieldPath: spec.credentials.secretRef.namespace
                 type: FromCompositeFieldPath
-              - fromFieldPath: metadata.uid
+              - fromFieldPath: spec.parameters.id
                 toFieldPath: spec.credentials.secretRef.name
                 transforms:
                   - string:
-                      fmt: '%s-ekscluster'
+                      fmt: '%s-eks-cluster-auth'
                       type: Format
                     type: string
                 type: FromCompositeFieldPath
@@ -839,11 +856,11 @@ spec:
               - fromFieldPath: spec.writeConnectionSecretToRef.namespace
                 toFieldPath: spec.credentials.secretRef.namespace
                 type: FromCompositeFieldPath
-              - fromFieldPath: metadata.uid
+              - fromFieldPath: spec.parameters.id
                 toFieldPath: spec.credentials.secretRef.name
                 transforms:
                   - string:
-                      fmt: '%s-ekscluster'
+                      fmt: '%s-eks-cluster-auth'
                       type: Format
                     type: string
                 type: FromCompositeFieldPath
@@ -862,9 +879,8 @@ spec:
                     metadata:
                       namespace: default
             patches:
-              - fromFieldPath: spec.parameters.id
-                toFieldPath: spec.providerConfigRef.name
-                type: FromCompositeFieldPath
+              - patchSetName: kubernetesProviderConfigRef
+                type: PatchSet    
               - fromFieldPath: spec.parameters.id
                 toFieldPath: metadata.name
                 transforms:
@@ -901,9 +917,8 @@ spec:
                       name: aws-auth
                       namespace: kube-system
             patches:
-              - fromFieldPath: spec.parameters.id
-                toFieldPath: spec.providerConfigRef.name
-                type: FromCompositeFieldPath
+              - patchSetName: kubernetesProviderConfigRef
+                type: PatchSet    
               - fromFieldPath: spec.parameters.id
                 toFieldPath: metadata.name
                 transforms:

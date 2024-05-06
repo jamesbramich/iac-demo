@@ -87,7 +87,7 @@ kubectl apply -f apis/aws/eks-cluster/
 
 ```bash
 # Set secret name to the appopriate value 
-SECRETNAME=$(kubectl -n crossplane-system get secret -o name | grep ekscluster)
+SECRETNAME=$(kubectl -n crossplane-system get secret -o name | grep "-eks-cluster-auth")
 kubectl --namespace crossplane-system get $SECRETNAME --output jsonpath="{.data.kubeconfig}" | base64 -d >kubeconfig.txt
 ```
 

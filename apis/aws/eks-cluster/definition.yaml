@@ -87,6 +87,15 @@ spec:
                         - clientId
                         - issuerUrl
                         - adminGroupId
+                    vpcConfig:
+                      type: object
+                      properties:
+                        publicAccessCidrs:
+                          description: Indicates which CIDR blocks can access the Amazon EKS public API server endpoint. 
+                          type: array
+                          items:
+                            type: string
+                          default: ['0.0.0.0/0']
                     existingNetwork:
                       type: object
                       description: Only required if crossplane is to assume management of an existing VPC
@@ -142,6 +151,7 @@ spec:
                       description: Kubernetes version
                       type: string
                       enum:
+                        - "1.29"
                         - "1.28"
                         - "1.27"
                         - "1.26"

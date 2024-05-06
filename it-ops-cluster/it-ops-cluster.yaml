@@ -29,8 +29,11 @@ spec:
       clientId: f2653318-e686-4fd1-85ec-5cf692ba0b20
       issuerUrl: https://sts.windows.net/97c78528-728a-4eb7-b50e-ee7aced0a1ce/
       adminGroupId: efaddfcc-7846-48db-a87b-62a211452c74 # NoFrixion-SysAdmins
+    vpcConfig:
+      publicAccessCidrs: 
+        - '83.147.179.90/32'
     nodes:
       count: 3
       instanceType: t3.small
   writeConnectionSecretToRef:
-    name: it-ops-cluster-aws-kubeconfig
+    # name: <= patched using `{spec.parameters.id}-eks-cluster-auth`
