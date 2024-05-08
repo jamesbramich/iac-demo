@@ -56,6 +56,11 @@ spec:
               - fromFieldPath: spec.parameters.region
                 toFieldPath: spec.forProvider.region
                 type: FromCompositeFieldPath
+          - name: tags
+            patches:
+              - fromFieldPath: spec.parameters.tags
+                toFieldPath: spec.forProvider.tags
+                type: FromCompositeFieldPath
         resources:
           - name: XNetwork
             base:
@@ -74,6 +79,9 @@ spec:
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.parameters.region
                 toFieldPath: spec.parameters.region
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.tags
+                toFieldPath: spec.parameters.tags
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.parameters.deletionPolicy
                 toFieldPath: spec.parameters.deletionPolicy
@@ -120,6 +128,8 @@ spec:
                 type: PatchSet
               - patchSetName: deletionPolicy
                 type: PatchSet
+              - type: PatchSet
+                patchSetName: tags
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.parameters.id
                 toFieldPath: "metadata.annotations[crossplane.io/external-name]"
@@ -177,6 +187,8 @@ spec:
                 type: PatchSet
               - patchSetName: region
                 type: PatchSet
+              - type: PatchSet
+                patchSetName: tags
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.parameters.id
                 toFieldPath: metadata.annotations["crossplane.io/external-name"]
@@ -242,6 +254,8 @@ spec:
               - patchSetName: deletionPolicy
                 type: PatchSet
               - patchSetName: region
+                type: PatchSet
+              - patchSetName: tags
                 type: PatchSet
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.parameters.identityProvider.clientId
@@ -314,6 +328,8 @@ spec:
               - patchSetName: deletionPolicy
                 type: PatchSet
               - patchSetName: region
+                type: PatchSet
+              - patchSetName: tags
                 type: PatchSet
               - fromFieldPath: status.eks.clusterSecurityGroupId
                 policy:
@@ -392,6 +408,8 @@ spec:
               - patchSetName: providerConfigRef
                 type: PatchSet
               - patchSetName: deletionPolicy
+                type: PatchSet
+              - patchSetName: tags
                 type: PatchSet
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.parameters.id
@@ -518,6 +536,8 @@ spec:
                 type: PatchSet
               - patchSetName: region
                 type: PatchSet
+              - patchSetName: tags
+                type: PatchSet
               - fromFieldPath: spec.parameters.nodes.count
                 toFieldPath: spec.forProvider.scalingConfig[0].desiredSize
                 type: FromCompositeFieldPath
@@ -555,6 +575,8 @@ spec:
               - patchSetName: providerConfigRef
                 type: PatchSet
               - patchSetName: deletionPolicy
+                type: PatchSet
+              - patchSetName: tags
                 type: PatchSet
               - type: CombineFromComposite
                 toFieldPath: spec.forProvider.assumeRolePolicy
@@ -648,6 +670,8 @@ spec:
                 type: PatchSet
               - patchSetName: region
                 type: PatchSet
+              - patchSetName: tags
+                type: PatchSet
               - fromFieldPath: status.eks.clusterName
                 policy:
                   fromFieldPath: Required
@@ -673,6 +697,8 @@ spec:
               - patchSetName: providerConfigRef
                 type: PatchSet
               - patchSetName: deletionPolicy
+                type: PatchSet
+              - patchSetName: tags
                 type: PatchSet
               - type: CombineFromComposite
                 toFieldPath: spec.forProvider.assumeRolePolicy
@@ -766,6 +792,8 @@ spec:
                 type: PatchSet
               - patchSetName: region
                 type: PatchSet
+              - patchSetName: tags
+                type: PatchSet
               - fromFieldPath: status.eks.clusterName
                 policy:
                   fromFieldPath: Required
@@ -792,6 +820,8 @@ spec:
                 type: PatchSet
               - patchSetName: deletionPolicy
                 type: PatchSet
+              - patchSetName: tags
+                type: PatchSet
               - fromFieldPath: status.eks.oidc
                 policy:
                   fromFieldPath: Required
@@ -802,6 +832,9 @@ spec:
                   fromFieldPath: Optional
                 toFieldPath: status.eks.oidcArn
                 type: ToCompositeFieldPath
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.existingOidcProvider
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
 
           - name: providerConfigHelm
             base:

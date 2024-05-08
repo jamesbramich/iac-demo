@@ -19,7 +19,6 @@ metadata:
 spec:
   connectionSecretKeys:
     - kubeconfig
-  defaultCompositionUpdatePolicy: Manual
   group: aws.nofrixion.com
   names:
     kind: XCluster
@@ -48,6 +47,11 @@ spec:
                     region:
                       type: string
                       description: Region is the region you'd like your resource to be created in.
+                    tags:
+                      type: object
+                      description: Tags to be applied to ALL resources created in this composite resource.
+                      additionalProperties:
+                        type: string
                     iam:
                       type: object
                       description: IAM configuration to connect as ClusterAdmin.
@@ -96,6 +100,9 @@ spec:
                           items:
                             type: string
                           default: ['0.0.0.0/0']
+                    existingOidcProvider:
+                      type: string
+                      description: crossplane.io/external-name of an existing OIDC provider resource.
                     existingNetwork:
                       type: object
                       description: Only required if crossplane is to assume management of an existing VPC

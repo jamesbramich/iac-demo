@@ -55,6 +55,11 @@ spec:
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.parameters.region
                 toFieldPath: spec.forProvider.region
+          - name: tags
+            patches:
+              - fromFieldPath: spec.parameters.tags
+                toFieldPath: spec.forProvider.tags
+                type: FromCompositeFieldPath
         resources:
           - name: vpc
             base:
@@ -76,6 +81,8 @@ spec:
                 patchSetName: network-id
               - type: PatchSet
                 patchSetName: region
+              - type: PatchSet
+                patchSetName: tags
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.parameters.id
                 toFieldPath: spec.forProvider.tags["Name"]
@@ -108,6 +115,8 @@ spec:
                 patchSetName: network-id
               - type: PatchSet
                 patchSetName: region
+              - type: PatchSet
+                patchSetName: tags
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.parameters.id
                 toFieldPath: spec.forProvider.tags["Name"]
@@ -136,6 +145,8 @@ spec:
                 patchSetName: network-id
               - type: PatchSet
                 patchSetName: region
+              - type: PatchSet
+                patchSetName: tags
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.parameters.id
                 toFieldPath: spec.forProvider.tags["Name"]
@@ -171,6 +182,8 @@ spec:
                 patchSetName: network-id
               - type: PatchSet
                 patchSetName: region
+              - type: PatchSet
+                patchSetName: tags
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.parameters.id
                 toFieldPath: spec.forProvider.tags["Name"]
@@ -210,6 +223,8 @@ spec:
                 patchSetName: network-id-tags
               - type: PatchSet
                 patchSetName: region
+              - type: PatchSet
+                patchSetName: tags
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.parameters.region
                 toFieldPath: spec.forProvider.availabilityZone
@@ -271,6 +286,8 @@ spec:
                 patchSetName: network-id-tags
               - type: PatchSet
                 patchSetName: region
+              - type: PatchSet
+                patchSetName: tags
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.parameters.region
                 toFieldPath: spec.forProvider.availabilityZone
@@ -332,6 +349,8 @@ spec:
                 patchSetName: network-id-tags
               - type: PatchSet
                 patchSetName: region
+              - type: PatchSet
+                patchSetName: tags
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.parameters.region
                 toFieldPath: spec.forProvider.availabilityZone
@@ -390,6 +409,8 @@ spec:
                 patchSetName: network-id
               - type: PatchSet
                 patchSetName: region
+              - type: PatchSet
+                patchSetName: tags
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.parameters.region
                 toFieldPath: spec.forProvider.availabilityZone
@@ -448,6 +469,8 @@ spec:
                 patchSetName: network-id
               - type: PatchSet
                 patchSetName: region
+              - type: PatchSet
+                patchSetName: tags
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.parameters.region
                 toFieldPath: spec.forProvider.availabilityZone
@@ -506,6 +529,8 @@ spec:
                 patchSetName: network-id
               - type: PatchSet
                 patchSetName: region
+              - type: PatchSet
+                patchSetName: tags
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.parameters.region
                 toFieldPath: spec.forProvider.availabilityZone
@@ -561,6 +586,8 @@ spec:
                 patchSetName: network-id
               - type: PatchSet
                 patchSetName: region
+              - type: PatchSet
+                patchSetName: tags
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.parameters.existingNetwork.privateRouteTableId
                 toFieldPath: "metadata.annotations[crossplane.io/external-name]"
@@ -611,6 +638,8 @@ spec:
                 patchSetName: network-id
               - type: PatchSet
                 patchSetName: region
+              - type: PatchSet
+                patchSetName: tags
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.parameters.existingNetwork.publicRouteTableId
                 toFieldPath: "metadata.annotations[crossplane.io/external-name]"

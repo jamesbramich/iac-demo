@@ -51,6 +51,11 @@ spec:
                     region:
                       type: string
                       description: Region is the region you'd like your resource to be created in.
+                    tags:
+                      type: object
+                      description: Tags to be applied to ALL resources created in this composite resource.
+                      additionalProperties:
+                        type: string
                     existingNetwork:
                       type: object
                       description: Only required if crossplane is to assume management of an existing VPC

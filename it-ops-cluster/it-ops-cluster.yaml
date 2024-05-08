@@ -7,6 +7,7 @@
 # 
 # History:
 # 25 March      2024  James Bramich   Created, Northdown, Tasmania
+#  7 May        2024  James Bramich   Added tags, bumped k8s version to 1.29
 #-----------------------------------------------------------------------------
 apiVersion: aws.nofrixion.com/v1alpha1
 kind: Cluster
@@ -15,10 +16,14 @@ metadata:
   namespace: it-ops-cluster
 spec:
   compositeDeletePolicy: Foreground
+  compositionUpdatePolicy: Automatic
   parameters:
     id: it-ops-1
     region: eu-west-1
-    version: "1.28"
+    version: "1.29"
+    tags:
+      env: "itops"
+      stability: "alpha"
     iam:
       # replace with your custom arn like:
       # roleArn: arn:aws:iam::123456789:role/AWSReservedSSO_AdministratorAccess_d703c73ed340fde7
@@ -32,6 +37,35 @@ spec:
     vpcConfig:
       publicAccessCidrs: 
         - '83.147.179.90/32'
+    # existing resource configuration can only be filled in after intial VPC/Cluster deployment
+    # use the `crossplane.io/external-name` value
+    existingOidcProvider: "arn:aws:iam::145259453615:oidc-provider/oidc.eks.eu-west-1.amazonaws.com/id/9163C6294171F6CDFF958843BDA9F674"
+    existingNetwork:
+      vpcId: "vpc-0b334f9e4de48bd7d"
+      publicSubnetIds:
+        - "subnet-0a4a06b6ab034acfa"
+        - "subnet-046a8e571afd87149"
+        - "subnet-0b18c31a31ea5d1ea"
+      privateSubnetIds:
+        - "subnet-0f11e449420bdd641"
+        - "subnet-0398109b07f41a3a6"
+        - "subnet-00c8e1c695cc88b79"
+      internetGatewayId: "igw-04920a6d802cde52e"
+      natGatewayId: "nat-033264c0acf366e4b"
+      eipAllocationId: "eipalloc-079a067704b1bb693"
+      privateRouteTableId: "rtb-049815bc5bfd1df9c"
+      privateRouteId: "r-rtb-049815bc5bfd1df9c1080289494"
+      publicRouteTableId: "rtb-0a09c1dc0b0795240"
+      publicRouteId: "r-rtb-0a09c1dc0b07952401080289494"
+      mainRouteTableAssociationId: "rtbassoc-0f6bd65391430525b"
+      publicRouteTableAssociationIds:
+        - "rtbassoc-0513aeaa71a584729"
+        - "rtbassoc-05b5f14861b200ec8"
+        - "rtbassoc-07cb44d6d10142309"
+      privateRouteTableAssociationIds:
+        - "rtbassoc-09df25038604b0754"
+        - "rtbassoc-0870ee3e138670f1e"
+        - "rtbassoc-00dcd9360f291352d"
     nodes:
       count: 3
       instanceType: t3.small
