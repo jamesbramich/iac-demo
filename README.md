@@ -13,6 +13,21 @@ The initial strategy is to create a configuration to deploy the base cluster for
 
 The [intial setup instructions](./docs/initial-setup.md) describe how to use and IaC solution that runs in Kubernetes to deploy itself. Thankfully this does not have to be done very often...
 
+# Cluster Deployment #
+
+The cluster deployments use kustomize to install the kubernetes cluster and components.
+
+- Nofrixion specific [composite resource definitions (XRDs) and compositions](../apis/aws/) have beend defined to deploy a VPC and kubernetes cluster to AWS. The configuration is the same as those cluster initially deployed using `eksctl`
+- Cluster components (e.g. cluster autoscaler, nginx ingress controller, rabbitmq etc.) are deployed as seperate resources.
+
+This approach improves modularity in terms of deploying clusters that require different components, or in the case of deploying to a different CSP, a different composition for the cluster can be created.
+
+To deploy a cluster, create a kustomization.yaml file to deploy the following resouces to a specific namespace:
+
+* a cluster claim, which calls the xrds and compositions to create a specific cluster instance. For example, the [it-ops-1 cluster](./it-ops-cluster/it-ops-cluster.yaml)
+* crossplane objects and releases to deploy additional components. `Objects` use the crossplane kubernetes provider to run the equivalent of `kubectl apply ...` and `Releases` use the helm provider to deploy helm charts.
+
+
 ## Troubleshooting ##
 
 ### Deleting 'stuck' resources ###
@@ -26,6 +41,9 @@ kubectl patch $TARGET -p '{"metadata":{"finalizers": []}}' --type=merge
 
 ## REFERENCES ##
 
+* Crossplane docs:
+  * [Crossplane composite resource definitions (XRDs)](https://docs.crossplane.io/latest/concepts/composite-resource-definitions/)
+  * [Crossplane compositions](https://docs.crossplane.io/latest/concepts/compositions/)
 * Anton Putra's [tutorial for creating VPC and deploying EKS](https://youtu.be/mpfqPXfX6mg?si=VK0LR-SfwYGGs6KO) - basically what we want but with only two subnet pairs instead of three.
 * [GitOps model for provisioning and bootstrapping Amazon EKS clusters using Crossplane and Argo CD](https://aws.amazon.com/blogs/containers/gitops-model-for-provisioning-and-bootstrapping-amazon-eks-clusters-using-crossplane-and-argo-cd/) - see section, `Amazon EKS cluster provisioning using Crossplane`
 * A video showing how to use a temporary local cluster to bootstrap [Crossplane to manage Crossplane](https://youtu.be/IlaYGgyg06o?si=mXM9p73MyrLCd8gA)

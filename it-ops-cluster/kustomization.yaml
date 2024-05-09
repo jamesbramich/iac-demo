@@ -1,0 +1,36 @@
+#------------------------------------------------------------------------------
+#
+# Filename: kustomization.yaml
+#
+# Description: Provides resources for it-ops-1 cluster.
+#
+# Usage: kubectl apply -k <PATH-TO-FOLDER-CONTAINING-THIS-FILE>
+#
+# Author: James Bramich (james@nofrixion.com)
+#
+# History:
+#   9 May      2024    James Bramich  Created, Northdown, Tasmania, Australia.
+#-----------------------------------------------------------------------------
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: it-ops-cluster
+
+resources:
+  - it-ops-cluster.yaml
+  - helm-metrics-server.yaml
+
+replacements:
+- source:
+    kind: Cluster
+    name: it-ops-1
+    fieldPath: spec.parameters.id
+  targets:
+  - select:
+      name: metrics-server
+      kind: Release
+    fieldPaths:
+    - spec.providerConfigRef.name
+    options:
+      delimiter: "-"
+      index: 0

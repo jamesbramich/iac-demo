@@ -1,0 +1,26 @@
+#------------------------------------------------------------------------------
+#
+# Filename: helm-metrics-server.yaml
+#
+# Description: Crossplane helm provider release for kubernetes metrics server.
+#
+# Usage: Add as resource to kustomization.yaml for deployment.
+#
+# Author: James Bramich (james@nofrixion.com)
+#
+# History:
+#   9 May      2024    James Bramich  Created, Northdown, Tasmania, Australia.
+#-----------------------------------------------------------------------------
+apiVersion: helm.crossplane.io/v1beta1
+kind: Release
+metadata:
+  name: metrics-server
+spec:
+  forProvider:
+    chart:
+      name: metrics-server
+      repository: https://kubernetes-sigs.github.io/metrics-server/
+      version: 3.12.1
+    namespace: kube-system
+  providerConfigRef:
+    name: clusterId-helm-provider

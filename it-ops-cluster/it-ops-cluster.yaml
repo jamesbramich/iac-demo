@@ -13,7 +13,6 @@ apiVersion: aws.nofrixion.com/v1alpha1
 kind: Cluster
 metadata:
   name: it-ops-1
-  namespace: it-ops-cluster
 spec:
   compositeDeletePolicy: Foreground
   compositionUpdatePolicy: Automatic
