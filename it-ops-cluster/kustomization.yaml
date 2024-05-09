@@ -18,19 +18,28 @@ namespace: it-ops-cluster
 
 resources:
   - it-ops-cluster.yaml
+  - helm-cert-manager.yaml
   - helm-metrics-server.yaml
 
 replacements:
 - source:
     kind: Cluster
-    name: it-ops-1
     fieldPath: spec.parameters.id
   targets:
   - select:
-      name: metrics-server
+      group: helm.crossplane.io
       kind: Release
     fieldPaths:
     - spec.providerConfigRef.name
+    options:
+      delimiter: "-"
+      index: 0
+  - select:
+      group: kubernetes.crossplane.io
+      kind: Object
+    fieldPaths:
+    - spec.providerConfigRef.name
+    - metadata.name
     options:
       delimiter: "-"
       index: 0

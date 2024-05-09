@@ -7,10 +7,11 @@
 # Author: James Bramich (james@nofrixion.com)
 #
 # TODO
-# - remove security group rules for database access (hangover from reference architecture)
+# - add cluster autoscaler
 # 
 # History:
 # 25 March      2024  James Bramich   Created, Northdown, Tasmania
+#  9 May        2024  James Bramich   Added AWS load balancer controller settings
 #-----------------------------------------------------------------------------
 
 apiVersion: apiextensions.crossplane.io/v1
@@ -44,6 +45,16 @@ spec:
                 transforms:
                   - string:
                       fmt: '%s-k8s-provider'
+                      type: Format
+                    type: string
+          - name: helmProviderConfigRef
+            patches:
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.id
+                toFieldPath: spec.providerConfigRef.name
+                transforms:
+                  - string:
+                      fmt: '%s-helm-provider'
                       type: Format
                     type: string
           - name: deletionPolicy
@@ -868,6 +879,152 @@ spec:
             readinessChecks:
               - type: None
 
+# Setup AWS Load Balancer
+          - name: albControllerRole
+            base:
+              apiVersion: iam.aws.upbound.io/v1beta1
+              kind: Role
+              metadata:
+                labels:
+                  role: awsLoadBalancerController
+              spec:
+                forProvider:
+                  assumeRolePolicy: ""
+            patches:
+              - patchSetName: providerConfigRef
+                type: PatchSet
+              - patchSetName: deletionPolicy
+                type: PatchSet
+              - patchSetName: tags
+                type: PatchSet
+              - type: CombineFromComposite
+                toFieldPath: spec.forProvider.assumeRolePolicy
+                combine:
+                  variables:
+                  - fromFieldPath: status.eks.accountId
+                  - fromFieldPath: status.eks.oidcUri
+                  - fromFieldPath: status.eks.oidcUri
+                  - fromFieldPath: status.eks.oidcUri
+                  strategy: string
+                  string:
+                    fmt: |
+                      {
+                        "Version": "2012-10-17",
+                        "Statement": [
+                          {
+                            "Effect": "Allow",
+                            "Principal": {
+                              "Federated": "arn:aws:iam::%s:oidc-provider/%s"
+                            },
+                            "Action": "sts:AssumeRoleWithWebIdentity",
+                            "Condition": {
+                              "StringEquals": {
+                                "%s:aud": "sts.amazonaws.com",
+                                "%s:sub": "system:serviceaccount:kube-system:aws-load-balancer-controller"
+                              }
+                            }
+                          }
+                        ]
+                      }
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.id
+                toFieldPath: spec.forProvider.tags["Name"]
+                transforms:
+                  - type: string
+                    string:
+                      fmt: '%s-aws-load-balancer-controller-role'
+                      type: Format
+              - type: ToCompositeFieldPath
+                fromFieldPath: status.atProvider.arn
+                policy:
+                  fromFieldPath: Optional
+                toFieldPath: status.eks.awsLoadBalancerControllerRoleArn
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.id
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
+                transforms:
+                  - type: string
+                    string:
+                      fmt: '%s-aws-load-balancer-controller-role'
+                      type: Format
+
+          - name: albCotnrollerRolePolicyAttachment
+            base:
+              apiVersion: iam.aws.upbound.io/v1beta1
+              kind: RolePolicyAttachment
+              spec:
+                forProvider:
+                  policyArn: arn:aws:iam::145259453615:policy/AWSLoadBalancerControllerIAMPolicy
+                  roleSelector:
+                    matchControllerRef: true
+                    matchLabels:
+                      role: awsLoadBalancerController
+            patches:
+              - patchSetName: providerConfigRef
+                type: PatchSet
+              - patchSetName: deletionPolicy
+                type: PatchSet
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.id
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
+                transforms:
+                  - type: string
+                    string:
+                      fmt: '%s-alb-controller-rolepolicyattachment'
+                      type: Format
+
+          - name: albControllerSserviceAccount
+            base:
+              apiVersion: kubernetes.crossplane.io/v1alpha2
+              kind: Object
+              spec:
+                forProvider:
+                  manifest:
+                    apiVersion: v1
+                    kind: ServiceAccount
+                    metadata:
+                      name: aws-load-balancer-controller
+                      namespace: kube-system
+            patches:
+              - type: PatchSet    
+                patchSetName: kubernetesProviderConfigRef
+              - type: FromCompositeFieldPath
+                fromFieldPath: status.eks.awsLoadBalancerControllerRoleArn
+                toFieldPath: spec.forProvider.manifest.metadata.annotations["eks.amazonaws.com/role-arn"]
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.id
+                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
+                transforms:
+                  - type: string
+                    string:
+                      fmt: '%s-aws-load-balancer-sa'
+                      type: Format
+
+          - name: albControllerHelmChart
+            base:
+              apiVersion: helm.crossplane.io/v1beta1
+              kind: Release
+              metadata:
+                name: aws-load-balancer-controller
+              spec:
+                forProvider:
+                  chart:
+                    name: aws-load-balancer-controller
+                    repository: https://aws.github.io/eks-charts
+                    version: 1.7.2
+                  namespace: kube-system
+                  values:
+                    ServiceAccount:
+                      create: false
+                      name: aws-load-balancer-controller
+            patches:
+              - patchSetName: helmProviderConfigRef
+                type: PatchSet
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.id
+                toFieldPath: spec.forProvider.values.clusterName
+
+
           - name: providerConfigKubernetes
             base:
               apiVersion: kubernetes.crossplane.io/v1alpha1
@@ -1019,25 +1176,6 @@ spec:
             readinessChecks:
               - type: None
                         
-          - name: usageXEksByArbitraryLabeledRelease
-            base:
-              apiVersion: apiextensions.crossplane.io/v1alpha1
-              kind: Usage
-              spec:
-                by:
-                  apiVersion: helm.crossplane.io/v1beta1
-                  kind: Release
-                  resourceSelector:
-                    matchLabels:
-                      platform.upbound.io/deletion-ordering: enabled
-                of:
-                  apiVersion: eks.aws.upbound.io/v1beta1
-                  kind: Cluster
-                  resourceSelector:
-                    matchControllerRef: true
-            readinessChecks:
-              - type: None
-                        
           - name: usageXEksByK8sProviderConfig
             base:
               apiVersion: apiextensions.crossplane.io/v1alpha1
@@ -1052,6 +1190,15 @@ spec:
                   apiVersion: kubernetes.crossplane.io/v1alpha1
                   kind: ProviderConfig
                   resourceRef:
-                   name: providerConfigKubernetes
+                   name: ""
+            patches:
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.id
+                toFieldPath: spec.by.resourceRef.name
+                transforms:
+                  - string:
+                      fmt: '%s-k8s-provider'
+                      type: Format
+                    type: string
             readinessChecks:
               - type: None

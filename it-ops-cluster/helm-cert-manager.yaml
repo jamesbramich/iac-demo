@@ -1,0 +1,44 @@
+#------------------------------------------------------------------------------
+#
+# Filename: helm-cert-manager.yaml
+#
+# Description: Crossplane helm provider release for cert-manager.
+#
+# Usage: Add as resource to kustomization.yaml for deployment.
+#
+# Author: James Bramich (james@nofrixion.com)
+#
+# History:
+#   9 May      2024    James Bramich  Created, Northdown, Tasmania, Australia.
+#-----------------------------------------------------------------------------
+apiVersion: kubernetes.crossplane.io/v1alpha2
+kind: Object
+metadata:
+  name: cluster-cert-manager-namespace
+spec:
+  forProvider:
+    manifest:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: cert-manager
+  providerConfigRef:
+    name: clusterId-k8s-provider
+---
+apiVersion: helm.crossplane.io/v1beta1
+kind: Release
+metadata:
+  name: cert-manager
+spec:
+  forProvider:
+    chart:
+      # name: cert-manager
+      # repository: https://charts.jetstack.io/
+      url: https://charts.jetstack.io/charts/cert-manager-v1.14.5.tgz
+      # version: 1.14.5
+    namespace: cert-manager
+    set:
+      - name: installCRDs
+        value: "true"
+  providerConfigRef:
+    name: clusterId-helm-provider

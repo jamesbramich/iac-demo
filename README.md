@@ -18,7 +18,7 @@ The [intial setup instructions](./docs/initial-setup.md) describe how to use and
 The cluster deployments use kustomize to install the kubernetes cluster and components.
 
 - Nofrixion specific [composite resource definitions (XRDs) and compositions](../apis/aws/) have beend defined to deploy a VPC and kubernetes cluster to AWS. The configuration is the same as those cluster initially deployed using `eksctl`
-- Cluster components (e.g. cluster autoscaler, nginx ingress controller, rabbitmq etc.) are deployed as seperate resources.
+- Cluster components (e.g. cluster autoscaler, nginx ingress controller, cert-manager, rabbitmq etc.) are deployed as seperate resources.
 
 This approach improves modularity in terms of deploying clusters that require different components, or in the case of deploying to a different CSP, a different composition for the cluster can be created.
 
