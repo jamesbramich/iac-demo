@@ -24,8 +24,13 @@ resources:
 replacements:
 - source:
     kind: Cluster
-    fieldPath: spec.parameters.id
+    fieldPath: metadata.name
   targets:
+  - select:
+      group: aws.nofrixion.com
+      kind: Cluster
+    fieldPaths:
+    - spec.parameters.id
   - select:
       group: helm.crossplane.io
       kind: Release

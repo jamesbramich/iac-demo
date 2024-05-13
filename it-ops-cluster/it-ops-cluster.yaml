@@ -12,17 +12,17 @@
 apiVersion: aws.nofrixion.com/v1alpha1
 kind: Cluster
 metadata:
-  name: it-ops-1
+  name: it-ops-1  # Set the ACTUAL CLUSTER NAME here. kustomize uses replacements to map it where else it is needed.
 spec:
   compositeDeletePolicy: Foreground
   compositionUpdatePolicy: Automatic
   parameters:
-    id: it-ops-1
+    id: clusterName
     region: eu-west-1
     version: "1.29"
     tags:
       env: "itops"
-      stability: "alpha"
+      stability: "alphaV2"
     iam:
       # replace with your custom arn like:
       # roleArn: arn:aws:iam::123456789:role/AWSReservedSSO_AdministratorAccess_d703c73ed340fde7
