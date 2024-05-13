@@ -14,7 +14,7 @@
 apiVersion: kubernetes.crossplane.io/v1alpha2
 kind: Object
 metadata:
-  name: cluster-cert-manager-namespace
+  name: clusterName-cert-manager-namespace
 spec:
   forProvider:
     manifest:
@@ -23,7 +23,7 @@ spec:
       metadata:
         name: cert-manager
   providerConfigRef:
-    name: clusterId-k8s-provider
+    name: clusterName-k8s-provider
 ---
 apiVersion: helm.crossplane.io/v1beta1
 kind: Release
@@ -31,14 +31,13 @@ metadata:
   name: cert-manager
 spec:
   forProvider:
-    chart:
-      # name: cert-manager
-      # repository: https://charts.jetstack.io/
-      url: https://charts.jetstack.io/charts/cert-manager-v1.14.5.tgz
-      # version: 1.14.5
     namespace: cert-manager
-    set:
-      - name: installCRDs
-        value: "true"
+    chart:
+      name: cert-manager
+      repository: https://charts.jetstack.io/
+      version: v1.14.5
+    values:
+      installCRDs: true
+    waitTimeout: "600s"
   providerConfigRef:
-    name: clusterId-helm-provider
+    name: clusterName-helm-provider
