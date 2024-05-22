@@ -22,5 +22,10 @@ spec:
       repository: https://kubernetes-sigs.github.io/metrics-server/
       version: 3.12.1
     namespace: kube-system
+    values:
+      replicas: 2
+      podDisruptionBudget:
+        enabled: true
+        minAvailable: 1
   providerConfigRef:
-    name: clusterId-helm-provider
+    name: clusterName-helm-provider

@@ -10,6 +10,7 @@
 #
 # History:
 #   9 May      2024    James Bramich  Created, Northdown, Tasmania, Australia.
+#  21 May      2024    James Bramich  Added nginx, external secrets, workload identity system.
 #-----------------------------------------------------------------------------
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -18,7 +19,10 @@ namespace: it-ops-cluster
 
 resources:
   - it-ops-cluster.yaml
+  - helm-azure-workload-identity.yaml
   - helm-cert-manager.yaml
+  - helm-external-secrets.yaml
+  - helm-ingress-nginx.yaml
   - helm-metrics-server.yaml
 
 replacements:
@@ -45,6 +49,16 @@ replacements:
     fieldPaths:
     - spec.providerConfigRef.name
     - metadata.name
+    options:
+      delimiter: "-"
+      index: 0
+  #prepend cluster name to AWS network load balancer name
+  - select:
+      group: helm.crossplane.io
+      kind: Release
+      name: ingress-nginx
+    fieldPaths:
+    - spec.forProvider.values.controller.service.annotations.[service.beta.kubernetes.io/aws-load-balancer-name]
     options:
       delimiter: "-"
       index: 0

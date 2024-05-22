@@ -33,6 +33,9 @@ spec:
       clientId: f2653318-e686-4fd1-85ec-5cf692ba0b20
       issuerUrl: https://sts.windows.net/97c78528-728a-4eb7-b50e-ee7aced0a1ce/
       adminGroupId: efaddfcc-7846-48db-a87b-62a211452c74 # NoFrixion-SysAdmins
+    nodes:
+      count: 4
+      instanceType: t3.small
     vpcConfig:
       publicAccessCidrs: 
         - '83.147.179.90/32'
@@ -65,8 +68,5 @@ spec:
         - "rtbassoc-09df25038604b0754"
         - "rtbassoc-0870ee3e138670f1e"
         - "rtbassoc-00dcd9360f291352d"
-    nodes:
-      count: 3
-      instanceType: t3.small
   writeConnectionSecretToRef:
     # name: <= patched using `{spec.parameters.id}-eks-cluster-auth`

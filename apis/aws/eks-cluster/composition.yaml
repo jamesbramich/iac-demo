@@ -7,7 +7,7 @@
 # Author: James Bramich (james@nofrixion.com)
 #
 # TODO
-# - add cluster autoscaler
+# - fix cluster autoscaler (bouncing nodes every 10-15 min)
 # 
 # History:
 # 25 March      2024  James Bramich   Created, Northdown, Tasmania
@@ -793,6 +793,29 @@ spec:
                       fmt: '%s-efs-csi-rolepolicyattachment'
                       type: Format
 
+          - name: efsCsiPdb
+            base:
+              apiVersion: kubernetes.crossplane.io/v1alpha2
+              kind: Object
+              spec:
+                forProvider:
+                  manifest:
+                    apiVersion: policy/v1
+                    kind: PodDisruptionBudget
+                    metadata:
+                      name: efs-csi-controller-temp-pdb
+                      namespace: kube-system
+                    spec:
+                      maxUnavailable: 1
+                      selector:
+                        matchLabels:
+                          app: efs-csi-controller
+                          app.kubernetes.io/instance: aws-efs-csi-driver
+                          app.kubernetes.io/name: aws-efs-csi-driver
+            patches:
+              - patchSetName: kubernetesProviderConfigRef
+                type: PatchSet
+
           - name: efsCsiAddon
             base:
               apiVersion: eks.aws.upbound.io/v1beta1
@@ -1030,217 +1053,6 @@ spec:
                 fromFieldPath: spec.parameters.id
                 toFieldPath: spec.forProvider.values.clusterName
 # end load balancer setup
-
-# set up cluster autoscaler
-          - name: autoscalerIamRole
-            base:
-              apiVersion: iam.aws.upbound.io/v1beta1
-              kind: Role
-              metadata:
-                labels:
-                  role: clusterAutoscaler
-              spec:
-                forProvider:
-                  assumeRolePolicy: ""
-            patches:
-              - patchSetName: providerConfigRef
-                type: PatchSet
-              - patchSetName: deletionPolicy
-                type: PatchSet
-              - patchSetName: tags
-                type: PatchSet
-              - type: CombineFromComposite
-                toFieldPath: spec.forProvider.assumeRolePolicy
-                combine:
-                  variables:
-                  - fromFieldPath: status.eks.accountId
-                  - fromFieldPath: status.eks.oidcUri
-                  - fromFieldPath: status.eks.oidcUri
-                  - fromFieldPath: status.eks.oidcUri
-                  strategy: string
-                  string:
-                    fmt: |
-                      {
-                        "Version": "2012-10-17",
-                        "Statement": [
-                          {
-                            "Effect": "Allow",
-                            "Principal": {
-                              "Federated": "arn:aws:iam::%s:oidc-provider/%s"
-                            },
-                            "Action": "sts:AssumeRoleWithWebIdentity",
-                            "Condition": {
-                              "StringEquals": {
-                                "%s:aud": "sts.amazonaws.com",
-                                "%s:sub": "system:serviceaccount:kube-system:cluster-autoscaler-sa"
-                              }
-                            }
-                          }
-                        ]
-                      }
-              - type: FromCompositeFieldPath
-                fromFieldPath: spec.parameters.id
-                toFieldPath: spec.forProvider.tags["Name"]
-                transforms:
-                  - type: string
-                    string:
-                      fmt: '%s-cluster-autoscaler-role'
-                      type: Format
-              - type: ToCompositeFieldPath
-                fromFieldPath: status.atProvider.arn
-                policy:
-                  fromFieldPath: Optional
-                toFieldPath: status.eks.clusterAutoscalerRoleArn
-              - type: FromCompositeFieldPath
-                fromFieldPath: spec.parameters.id
-                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
-                transforms:
-                  - type: string
-                    string:
-                      fmt: '%s-cluster-autoscaler-role'
-                      type: Format
-
-          - name: autoscalerIamPolicy
-            base:
-              apiVersion: iam.aws.upbound.io/v1beta1
-              kind: Policy
-              metadata:
-              spec:
-                forProvider:
-                  policy: ""
-            patches:
-              - patchSetName: providerConfigRef
-                type: PatchSet
-              - patchSetName: deletionPolicy
-                type: PatchSet
-              - patchSetName: tags
-                type: PatchSet
-              - type: CombineFromComposite
-                toFieldPath: spec.forProvider.policy
-                combine:
-                  variables:
-                  - fromFieldPath: spec.parameters.region
-                  - fromFieldPath: status.eks.accountId
-                  - fromFieldPath: status.eks.nodeAutoscalingGroupName
-                  strategy: string
-                  string:
-                    fmt: |
-                      {
-                          "Version": "2012-10-17",
-                          "Statement": [
-                              {
-                                  "Effect": "Allow",
-                                  "Action": [
-                                      "autoscaling:DescribeAutoScalingGroups",
-                                      "autoscaling:DescribeAutoScalingInstances",
-                                      "autoscaling:DescribeLaunchConfigurations",
-                                      "autoscaling:DescribeScalingActivities",
-                                      "autoscaling:DescribeTags",
-                                      "ec2:DescribeInstanceTypes",
-                                      "ec2:DescribeLaunchTemplateVersions"
-                                  ],
-                                  "Resource": [
-                                      "*"
-                                  ]
-                              },
-                              {
-                                  "Effect": "Allow",
-                                  "Action": [
-                                      "autoscaling:SetDesiredCapacity",
-                                      "autoscaling:TerminateInstanceInAutoScalingGroup",
-                                      "ec2:DescribeImages",
-                                      "ec2:GetInstanceTypesFromInstanceRequirements",
-                                      "eks:DescribeNodegroup"
-                                  ],
-                                  "Resource": [
-                                      "arn:aws:autoscaling:%s:%s:autoScalingGroup:*:autoScalingGroupName/%s"
-                                  ]
-                              }
-                          ]
-                      }
-              - type: FromCompositeFieldPath
-                fromFieldPath: spec.parameters.id
-                toFieldPath: spec.forProvider.tags["Name"]
-                transforms:
-                  - type: string
-                    string:
-                      fmt: '%s-cluster-autoscaler-policy'
-                      type: Format
-              - type: ToCompositeFieldPath
-                fromFieldPath: status.atProvider.arn
-                policy:
-                  fromFieldPath: Optional
-                toFieldPath: status.eks.clusterAutoscalerPolicyArn
-              - type: FromCompositeFieldPath
-                fromFieldPath: spec.parameters.id
-                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
-                transforms:
-                  - type: string
-                    string:
-                      fmt: '%s-cluster-autoscaler-policy'
-                      type: Format
-
-          - name: autoscalerRolePolicyAttachment
-            base:
-              apiVersion: iam.aws.upbound.io/v1beta1
-              kind: RolePolicyAttachment
-              spec:
-                forProvider:
-                  policyArn: ""
-                  roleSelector:
-                    matchControllerRef: true
-                    matchLabels:
-                      role: clusterAutoscaler
-            patches:
-              - patchSetName: providerConfigRef
-                type: PatchSet
-              - patchSetName: deletionPolicy
-                type: PatchSet
-              - type: FromCompositeFieldPath
-                fromFieldPath: status.eks.clusterAutoscalerPolicyArn
-                toFieldPath: spec.forProvider.policyArn
-              - type: FromCompositeFieldPath
-                fromFieldPath: spec.parameters.id
-                toFieldPath: "metadata.annotations[crossplane.io/external-name]"
-                transforms:
-                  - type: string
-                    string:
-                      fmt: '%s-autoscaler-rolepolicyattachment'
-                      type: Format
-
-          - name: autoscalerHelmChart
-            base:
-              apiVersion: helm.crossplane.io/v1beta1
-              kind: Release
-              metadata:
-                name: autoscaler
-              spec:
-                forProvider:
-                  chart:
-                    name: cluster-autoscaler
-                    repository: https://kubernetes.github.io/autoscaler
-                    version: 9.36.0
-                  namespace: kube-system
-                  values:
-                    rbac:
-                      create: true
-                      serviceAccount:
-                        create: true
-                        name: cluster-autoscaler-sa
-            patches:
-              - patchSetName: helmProviderConfigRef
-                type: PatchSet
-              - type: FromCompositeFieldPath
-                fromFieldPath: spec.parameters.id
-                toFieldPath: spec.forProvider.values.autoDiscovery.clusterName
-              - type: FromCompositeFieldPath
-                fromFieldPath: spec.parameters.region
-                toFieldPath: spec.forProvider.values.awsRegion
-              - type: FromCompositeFieldPath
-                fromFieldPath: status.eks.clusterAutoscalerRoleArn
-                toFieldPath: spec.forProvider.values.rbac.serviceAccount.annotations["eks.amazonaws.com/role-arn"]
-
-# end cluster autoscaler setup
 
           - name: providerConfigKubernetes
             base:

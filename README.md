@@ -11,24 +11,28 @@ The initial strategy is to create a configuration to deploy the base cluster for
 
 ## Initial Setup ##
 
-The [intial setup instructions](./docs/initial-setup.md) describe how to use and IaC solution that runs in Kubernetes to deploy itself. Thankfully this does not have to be done very often...
+The [intial setup instructions](./docs/initial-setup.md) describe how to use an IaC solution that runs in Kubernetes to deploy itself. Thankfully this does not have to be done very often.
 
-# Cluster Deployment #
+## Cluster Deployment ##
 
-The cluster deployments use kustomize to install the kubernetes cluster and components.
+The cluster deployments use kustomize to install the kubernetes cluster and components. To improve modularity in terms of deploying clusters that require different components, or in the case of deploying to a different CSP, the deployment is designed as follows:
 
-- Nofrixion specific [composite resource definitions (XRDs) and compositions](../apis/aws/) have beend defined to deploy a VPC and kubernetes cluster to AWS. The configuration is the same as those cluster initially deployed using `eksctl`
-- Cluster components (e.g. cluster autoscaler, nginx ingress controller, cert-manager, rabbitmq etc.) are deployed as seperate resources.
+- Nofrixion specific [composite resource definitions (XRDs) and compositions](../apis/aws/) have beend defined to deploy a VPC and kubernetes cluster to AWS. The configuration is essentially the same as those clusters initially deployed using `eksctl`
+- Cluster components (e.g. nginx ingress controller, cert-manager, rabbitmq etc.) are deployed as seperate resources.
 
-This approach improves modularity in terms of deploying clusters that require different components, or in the case of deploying to a different CSP, a different composition for the cluster can be created.
-
-To deploy a cluster, create a kustomization.yaml file to deploy the following resouces to a specific namespace:
+To deploy a cluster, create a kustomization.yaml [(example)](./it-ops-cluster/kustomization.yaml) file to deploy the following resouces to a specific namespace:
 
 * a cluster claim, which calls the xrds and compositions to create a specific cluster instance. For example, the [it-ops-1 cluster](./it-ops-cluster/it-ops-cluster.yaml)
 * crossplane objects and releases to deploy additional components. `Objects` use the crossplane kubernetes provider to run the equivalent of `kubectl apply ...` and `Releases` use the helm provider to deploy helm charts.
 
+## Known Issues ##
 
-## Troubleshooting ##
+### Cluster Autoscaler ###
+Crossplane did not get on with the cluster autoscaler, nodes were scaling up and down constantly. Given Azure AKS and Google GKE have proprietry (and at least in the case of Azure, simple) solutions to node autoprovisioning it is probably work looking at Karpenter to handle this.
+
+However, to manually add a node to the crossplane cluster just change `spec.parameters.node.count` in the cluster manifest [(see example)](./it-ops-cluster/it-ops-cluster.yaml) to the desired value.
+
+# Troubleshooting #
 
 ### Deleting 'stuck' resources ###
 

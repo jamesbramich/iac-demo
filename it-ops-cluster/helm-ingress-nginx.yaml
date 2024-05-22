@@ -1,0 +1,58 @@
+#------------------------------------------------------------------------------
+#
+# Filename: helm-ingress-nginx.yaml
+#
+# Description: Crossplane helm provider release for kubernetes nginx igress controller.
+#
+# Usage: Add as resource to kustomization.yaml for deployment.
+#
+# Author: James Bramich (james@nofrixion.com)
+#
+# History:
+#  21 May      2024    James Bramich  Created, Northdown, Tasmania, Australia.
+#-----------------------------------------------------------------------------
+apiVersion: helm.crossplane.io/v1beta1
+kind: Release
+metadata:
+  name: ingress-nginx
+spec:
+  forProvider:
+    chart:
+      name: ingress-nginx
+      repository: https://kubernetes.github.io/ingress-nginx
+      version: 4.10.1
+    namespace: kube-system
+    values:
+      controller:
+        replicaCount: 2
+        enableAnnotationValidations: true
+        service:
+          type: LoadBalancer
+          annotations:
+            service.beta.kubernetes.io/aws-load-balancer-name: clusterName-nlb
+            service.beta.kubernetes.io/aws-load-balancer-type: external
+            service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
+            service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
+            service.beta.kubernetes.io/aws-load-balancer-healthcheck-protocol: tcp
+            service.beta.kubernetes.io/aws-load-balancer-healthcheck-path: /healthz
+            service.beta.kubernetes.io/aws-load-balancer-target-group-attributes: preserve_client_ip.enabled=true
+            service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: "*"
+        # custom response headers for PCI DSS
+        addHeaders:
+          Strict-Transport-Security: max-age=15724800; includeSubDomains
+          X-Content-Type-Options: nosniff
+        # Update config map - mostly to make sure IdentityServer stuff works.
+        config:
+          proxy-body-size: "200M"
+          proxy-buffer-size: "128k"
+          proxy-buffers: "4 256k"
+          proxy-busy-buffers-size: "256k"
+          client-header-buffer-size: "64k"
+          http2-max-field-size: "16k"
+          http2-max-header-size: "128k"
+          large-client-header-buffers: "8 64k"
+          use-proxy-protocol: "true"
+          proxy-real-ip-cidr: 192.168.0.0/16
+          enable-real-ip: "true"
+  providerConfigRef:
+    name: clusterName-helm-provider

@@ -1,0 +1,42 @@
+#------------------------------------------------------------------------------
+#
+# Filename: helm-azure-workload-identity.yaml
+#
+# Description: Crossplane helm provider release for kubernetes external secrets operator.
+#
+# Usage: Add as resource to kustomization.yaml for deployment.
+#
+# Author: James Bramich (james@nofrixion.com)
+#
+# History:
+#  21 May      2024    James Bramich  Created, Northdown, Tasmania, Australia.
+#-----------------------------------------------------------------------------
+apiVersion: kubernetes.crossplane.io/v1alpha2
+kind: Object
+metadata:
+  name: clusterName-azure-workload-identity-namespace
+spec:
+  forProvider:
+    manifest:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: azure-workload-identity-system
+  providerConfigRef:
+    name: clusterName-k8s-provider
+---
+apiVersion: helm.crossplane.io/v1beta1
+kind: Release
+metadata:
+  name: workload-identity-webhook
+spec:
+  forProvider:
+    chart:
+      name: workload-identity-webhook
+      repository: https://azure.github.io/azure-workload-identity/charts
+      version: 1.2.2
+    namespace: azure-workload-identity-system
+    values:
+      azureTenantID: 97c78528-728a-4eb7-b50e-ee7aced0a1ce
+  providerConfigRef:
+    name: clusterName-helm-provider

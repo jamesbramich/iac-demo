@@ -1,2 +1,3 @@
 aws-credentials.txt
 kubeconfig.txt
+*.log
